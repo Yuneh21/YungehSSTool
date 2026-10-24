@@ -75,7 +75,7 @@ function Show-Report([string]$name,[scriptblock]$collect) {
     $status.Text='Check failed'
   }
 }
-$actions=[ordered]@{
+$actions=@{
   'OVERVIEW'={
     'Welcome to Yungeh SS Tool.'
     ''
