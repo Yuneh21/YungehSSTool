@@ -1,35 +1,3 @@
-# Yungeh SS Tool - original, local-only diagnostic dashboard
-# Windows PowerShell 5.1 / Windows Forms. No external downloads or uploads.
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-[System.Windows.Forms.Application]::EnableVisualStyles()
-
-function Color([string]$hex) { return [System.Drawing.ColorTranslator]::FromHtml($hex) }
-$bg=(Color '#0B1020'); $panel=(Color '#111A2D'); $card=(Color '#17243A'); $accent=(Color '#39C6D6'); $muted=(Color '#91A3BA'); $white=(Color '#E9F4FF'); $border=(Color '#2B3D58')
-$form=New-Object System.Windows.Forms.Form
-$form.Text='Yungeh SS Tool | Diagnostic Dashboard'; $form.Size=New-Object System.Drawing.Size(1190,780)
-$form.MinimumSize=New-Object System.Drawing.Size(1050,700); $form.StartPosition='CenterScreen'; $form.BackColor=$bg
-$form.Font=New-Object System.Drawing.Font('Segoe UI',9)
-
-function Label($parent,$text,$x,$y,$w,$h,$size,$color,$bold=$false) {
- $l=New-Object System.Windows.Forms.Label; $l.Text=$text; $l.Location=New-Object System.Drawing.Point($x,$y)
- $l.Size=New-Object System.Drawing.Size($w,$h); $l.ForeColor=$color
- $style=[System.Drawing.FontStyle]::Regular; if($bold){$style=[System.Drawing.FontStyle]::Bold}
- $l.Font=New-Object System.Drawing.Font('Segoe UI',$size,$style); $parent.Controls.Add($l); return $l
-}
-function Button($parent,$text,$x,$y,$w,$h,$background,$foreground) {
- $b=New-Object System.Windows.Forms.Button; $b.Text=$text; $b.Location=New-Object System.Drawing.Point($x,$y)
- $b.Size=New-Object System.Drawing.Size($w,$h); $b.FlatStyle='Flat'; $b.FlatAppearance.BorderSize=0
- $b.BackColor=$background; $b.ForeColor=$foreground; $b.Cursor='Hand'; $b.Font=New-Object System.Drawing.Font('Segoe UI',9,[System.Drawing.FontStyle]::Bold)
- $parent.Controls.Add($b); return $b
-}
-$sidebar=New-Object System.Windows.Forms.Panel; $sidebar.BackColor=$panel; $sidebar.Dock='Left'; $sidebar.Width=210; $form.Controls.Add($sidebar)
-$logo=(Label $sidebar 'Y  /  SS' 23 25 170 48 25 $accent $true)
-$null=(Label $sidebar 'YUNGEH DIAGNOSTICS' 24 75 180 24 9 $muted $true)
-$null=(Label $sidebar 'ACTIONS' 22 143 170 22 9 $accent $true)
-$main=New-Object System.Windows.Forms.Panel; $main.Dock='Fill'; $main.BackColor=$bg; $form.Controls.Add($main); $main.BringToFront()
-$header=New-Object System.Windows.Forms.Panel; $header.BackColor=$panel; $header.Dock='Top'; $header.Height=92; $main.Controls.Add($header)
-$null=(Label $header 'YUNGEH  /  SS TOOL' 24 16 500 38 21 $white $true)
 $null=(Label $header 'Local diagnostic toolkit  •  Permission required' 26 56 650 22 10 $muted)
 $status=(Label $header '●  READY' 795 30 140 30 11 $accent $true)
 $console=New-Object System.Windows.Forms.TextBox; $console.Multiline=$true; $console.ReadOnly=$true
@@ -94,3 +62,67 @@ function GetScan([string]$name) {
       foreach($f in $items){$lines.Add('  '+$f.Name)}
      } else {$lines.Add('  Not found.')}
     }
+   }
+   'Running Processes' {
+    $p=@(Get-Process -ErrorAction SilentlyContinue | Sort-Object ProcessName | Select-Object -First 100)
+    foreach($v in $p){$lines.Add(('{0,-30} PID {1}' -f $v.ProcessName,$v.Id))}
+    $lines.Add('First 100 processes shown.')
+   }
+   'System Info' {
+    $lines.Add('Computer: '+$env:COMPUTERNAME)
+    $lines.Add('Windows: '+[Environment]::OSVersion.VersionString)
+    $lines.Add('PowerShell: '+$PSVersionTable.PSVersion.ToString())
+    $lines.Add('Architecture: '+[Environment]::Is64BitOperatingSystem)
+    $lines.Add('Logical processors: '+[Environment]::ProcessorCount)
+   }
+   default {$lines.Add('Select a category to begin.')}
+  }
+ } catch {$lines.Add('Scan error: '+$_.Exception.Message)}
+ return ($lines -join [Environment]::NewLine)
+}
+function SetPage([string]$name) {
+ $script:current=$name; $workspace.Controls.Clear()
+ foreach($k in $nav.Keys){$nav[$k].BackColor=$card; $nav[$k].ForeColor=$white}
+ $nav[$name].BackColor=(Color '#14596C'); $nav[$name].ForeColor=$white
+ $script:pageTitle=(Label $workspace $name 26 24 700 44 22 $white $true)
+ if($name -eq 'Overview') {
+  $null=(Label $workspace 'Choose a diagnostic category to open its scan page.' 28 73 780 26 11 $muted)
+  $items=@(
+   @('Client Checker','Game and launcher processes'),@('Macro Detector','Known automation applications'),
+   @('Minecraft Mods','Local Minecraft files'),@('Running Processes','Active applications'),@('System Info','Basic device information'))
+  $i=0
+  foreach($item in $items) {
+   $col=$i%2; $row=[math]::Floor($i/2)
+   $x=28+($col*365); $y=122+($row*110)
+   $tile=(Button $workspace ($item[0]+'   >') $x $y 344 90 $card $white)
+   $tile.Tag=$item[0]
+   $tile.Add_Click({param($sender,$args) SetPage ([string]$sender.Tag)})
+   $i++
+  }
+ } else {
+  $desc=@{'Client Checker'='Checks common Minecraft and launcher process names.';'Macro Detector'='Looks for known macro or automation process names.';'Minecraft Mods'='Lists local Minecraft mod and version files.';'Running Processes'='Shows a snapshot of running processes.';'System Info'='Displays basic Windows system information.'}[$name]
+  $null=(Label $workspace $desc 28 73 810 28 11 $muted)
+  $scan=(Button $workspace '▶  START SCAN' 28 120 185 47 (Color '#0F9EAE') $white)
+  $scan.Add_Click({
+   if(!(CheckConsent)){Log 'Scan cancelled: permission not granted.';return}
+   $status.Text='●  SCANNING'; $form.Refresh(); Log ('Scanning '+$script:current+'...')
+   $script:lastReport=(GetScan $script:current)
+   $script:resultBox.Text=$script:lastReport
+   $status.Text='●  COMPLETE'; Log ('Completed '+$script:current)
+  })
+  $script:resultBox=New-Object System.Windows.Forms.TextBox
+  $script:resultBox.Multiline=$true; $script:resultBox.ReadOnly=$true; $script:resultBox.ScrollBars='Both'
+  $script:resultBox.WordWrap=$false; $script:resultBox.BackColor=$card; $script:resultBox.ForeColor=$white
+  $script:resultBox.BorderStyle='FixedSingle'; $script:resultBox.Font=New-Object System.Drawing.Font('Consolas',10)
+  $script:resultBox.Location=New-Object System.Drawing.Point(28,188)
+  $script:resultBox.Size=New-Object System.Drawing.Size(740,325)
+  $script:resultBox.Anchor='Top,Left,Right,Bottom'
+  $workspace.Controls.Add($script:resultBox)
+  $null=(Label $workspace 'Results are local. Matches are not evidence of rule-breaking.' 28 520 740 24 9 $muted)
+ }
+}
+foreach($name in $categories){$nav[$name].Tag=$name; $nav[$name].Add_Click({param($sender,$args) SetPage ([string]$sender.Tag)})}
+$export.Add_Click({
+ if($script:lastReport -eq 'No scan has been run.') {[System.Windows.Forms.MessageBox]::Show('Run a scan before exporting.');return}
+ $dlg=New-Object System.Windows.Forms.SaveFileDialog; $dlg.Filter='Text report (*.txt)|*.txt'; $dlg.FileName='YungehSS-Report.txt'
+ if($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK){
