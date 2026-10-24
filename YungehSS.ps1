@@ -33,8 +33,8 @@ function Button($text,$x,$y,$w,$h) {
   return $b
 }
 $form=New-Object System.Windows.Forms.Form
-$form.Text='Yungeh SS Tool'; $form.Size=New-Object System.Drawing.Size(1060,690)
-$form.MinimumSize=New-Object System.Drawing.Size(900,600)
+$form.Text='Yungeh SS Tool'; $form.Size=New-Object System.Drawing.Size(1060,760)
+$form.MinimumSize=New-Object System.Drawing.Size(900,700)
 $form.StartPosition='CenterScreen'; $form.BackColor=$script:bg
 $header=New-Object System.Windows.Forms.Panel
 $header.Dock='Top'; $header.Height=76; $header.BackColor=$script:panel
@@ -42,7 +42,7 @@ $header.Controls.Add((Label 'Y  /  YUNGEH' 28 14 500 30 19 $script:accent $true)
 $header.Controls.Add((Label 'SS TOOL   |   LOCAL DIAGNOSTICS' 30 47 510 19 9 $script:muted))
 $form.Controls.Add($header)
 $sidebar=New-Object System.Windows.Forms.Panel
-$sidebar.Dock='Left'; $sidebar.Width=216; $sidebar.BackColor=$script:panel
+$sidebar.Dock='Left'; $sidebar.Width=216; $sidebar.BackColor=$script:panel; $sidebar.AutoScroll=$true
 $form.Controls.Add($sidebar)
 $content=New-Object System.Windows.Forms.Panel
 $content.Dock='Fill'; $content.BackColor=$script:bg
