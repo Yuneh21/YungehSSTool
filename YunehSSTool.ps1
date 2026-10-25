@@ -1,4 +1,4 @@
-﻿# YunehSSTool - independently written local diagnostics
+# YunehSSTool - independently written local diagnostics
 # No external tools, telemetry, credential collection, or remote execution.
 # Read-only local checks require the computer owner's permission.
 param([string]$ScanId = '')
