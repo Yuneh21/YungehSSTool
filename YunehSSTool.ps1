@@ -1,6 +1,7 @@
-﻿# YunehSSTool - independently written local diagnostics
+# YunehSSTool - independently written local diagnostics
 # No external tools, telemetry, credential collection, or remote execution.
 # Read-only local checks require the computer owner's permission.
+param([string]$ScanId = '')
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
@@ -188,6 +189,24 @@ function Scan-Local([string]$id) {
  return ($output -join [Environment]::NewLine)
 }
 
+# Command-line mode: a single explicitly selected detector.
+if($ScanId) {
+ $chosen = @($script:tools | Where-Object { $_.Url -eq $ScanId -and $_.Kind -eq 'Local' } | Select-Object -First 1)
+ if($chosen.Count -ne 1) { Write-Host 'Unknown detector.' -ForegroundColor Red; exit 2 }
+ Write-Host ''
+ Write-Host '===============================================' -ForegroundColor Cyan
+ Write-Host ' YUNEH CHEAT FINDER' -ForegroundColor Cyan
+ Write-Host '===============================================' -ForegroundColor Cyan
+ Write-Host ("Detector: " + $chosen[0].Name)
+ Write-Host 'Read-only scan. Results are indicators, not proof.' -ForegroundColor Yellow
+ Write-Host ''
+ try { Write-Host (Scan-Local $ScanId) }
+ catch { Write-Host ("Scan error: " + $_.Exception.Message) -ForegroundColor Red }
+ Write-Host ''
+ Write-Host 'Scan complete. Close this CMD window when finished.' -ForegroundColor Green
+ exit
+}
+
 [xml]$xaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Original Staff Workspace" Width="1240" Height="780" MinWidth="950" MinHeight="600" Background="#080D18" WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
 <Grid>
@@ -303,16 +322,23 @@ $script:Render = {
   $btn.Content = $stack
   $btn.Add_Click({
    param($sender,$args)
-   $script:selected = $sender.Tag
-   $selectedName.Text = $script:selected.Name
-   $selectedDesc.Text = $script:selected.Description
-   if($script:selected.Kind -eq 'Local') {
-    $selectedSource.Text = 'Built-in local, read-only check'
-    $open.Content = 'Run local check'
-
-   }
-   $open.IsEnabled = $true
-   Log-Event "Selected: $($script:selected.Name)"
+   $tool = $sender.Tag
+   $script:selected = $tool
+   $selectedName.Text = $tool.Name
+   $selectedDesc.Text = $tool.Description
+   $selectedSource.Text = 'Opens its own CMD results window'
+   $open.IsEnabled = $false
+   $scriptPath = $PSCommandPath
+   if(-not $scriptPath) { Log-Event 'Cannot locate script file.'; return }
+   $answer = [Windows.MessageBox]::Show(
+    "Open a CMD window and run $($tool.Name)?`n`nOnly this selected check will run, on this computer.",
+    'Yuneh Cheat Finder','YesNo','Question')
+   if($answer -ne 'Yes'){return}
+   try {
+    $arguments = '/d /k powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File "' + $scriptPath + '" -ScanId "' + $tool.Url + '"'
+    Start-Process -FilePath "$env:SystemRoot\System32\cmd.exe" -ArgumentList $arguments
+    Log-Event "Opened CMD detector: $($tool.Name)"
+   } catch { Log-Event "Could not open CMD: $($_.Exception.Message)" }
   })
   [void]$items.Children.Add($btn)
  }
