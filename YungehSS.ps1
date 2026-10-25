@@ -1,3 +1,35 @@
+# Yungy SS Tool - offline, consent-based read-only diagnostic dashboard
+Add-Type -AssemblyName PresentationFramework
+Add-Type -AssemblyName PresentationCore
+Add-Type -AssemblyName WindowsBase
+
+$script:checks = @(
+ [pscustomobject]@{Name='Yungy Minecraft Mods';Category='Minecraft';Description='List mod JAR names in the Minecraft mods folder';Id='mods'},
+ [pscustomobject]@{Name='Yungy Outside Mods';Category='Minecraft';Description='List Minecraft-related JARs in Downloads and Desktop';Id='outside'},
+ [pscustomobject]@{Name='Yungy Minecraft Versions';Category='Minecraft';Description='List locally installed Minecraft versions';Id='versions'},
+ [pscustomobject]@{Name='Yungy Minecraft Logs';Category='Minecraft';Description='List recent Minecraft log files (names only)';Id='logs'},
+ [pscustomobject]@{Name='Yungy Minecraft Processes';Category='Minecraft';Description='Show running Minecraft and launcher processes';Id='minecraftprocess'},
+ [pscustomobject]@{Name='Yungy Macro Processes';Category='Macro';Description='Check for commonly named macro applications';Id='macro'},
+ [pscustomobject]@{Name='Yungy Peripheral Software';Category='Macro';Description='Check for running mouse and keyboard utilities';Id='peripheral'},
+ [pscustomobject]@{Name='Yungy Java Processes';Category='Macro';Description='List running Java processes';Id='java'},
+ [pscustomobject]@{Name='Yungy Running Processes';Category='Windows';Description='Show process names and IDs';Id='processes'},
+ [pscustomobject]@{Name='Yungy Recent Downloads';Category='Windows';Description='List recent download file names';Id='downloads'},
+ [pscustomobject]@{Name='Yungy Startup Entries';Category='Windows';Description='List startup entry names (no registry values)';Id='startup'},
+ [pscustomobject]@{Name='Yungy System Summary';Category='Windows';Description='Show OS version, computer name and uptime';Id='system'}
+)
+
+function Get-ScanLines([string]$id) {
+ $lines = New-Object 'System.Collections.Generic.List[string]'
+ try {
+  switch ($id) {
+   'mods' {
+    $dir = Join-Path $env:APPDATA '.minecraft\mods'
+    if (!(Test-Path -LiteralPath $dir)) { $lines.Add('Minecraft mods folder not found.'); break }
+    $files = @(Get-ChildItem -LiteralPath $dir -File -Filter '*.jar' -ErrorAction SilentlyContinue)
+    foreach ($f in $files) { $lines.Add($f.Name) }
+    if ($files.Count -eq 0) { $lines.Add('No JAR files found.') }
+   }
+   'outside' {
     foreach ($folder in @('Downloads','Desktop')) {
      $dir = Join-Path $env:USERPROFILE $folder
      $lines.Add("--- $folder ---")
@@ -62,62 +94,3 @@
  </Window.Resources>
  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="218"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
   <Border Background="#101A2B" BorderBrush="#294260" BorderThickness="0,0,1,0"><DockPanel Margin="13"><StackPanel DockPanel.Dock="Top" Margin="5,16,5,22"><TextBlock Text="Y / YUNGY" Foreground="#3CA6FF" FontSize="26" FontWeight="Bold"/><TextBlock Text="SS TOOL  /  DETECTORS" Foreground="#8AA8C9" FontSize="10" Margin="1,5,0,0"/><Border Height="2" Background="#238FFF" Margin="0,18,0,0"/></StackPanel><StackPanel DockPanel.Dock="Bottom" Margin="8,10"><TextBlock Text="LOCAL SCANS" Foreground="#4CAFFF" FontWeight="Bold" FontSize="11"/><TextBlock Text="Read-only. Owner permission required." Foreground="#8DA7C6" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0"/></StackPanel><StackPanel x:Name="NavItems"/></DockPanel></Border>
-  <Grid Grid.Column="1" Margin="22,19,22,16"><Grid.RowDefinitions><RowDefinition Height="79"/><RowDefinition Height="*"/><RowDefinition Height="12"/><RowDefinition Height="135"/></Grid.RowDefinitions>
-   <Grid Grid.Row="0"><StackPanel><TextBlock x:Name="Heading" Text="All Detectors" FontSize="26" FontWeight="SemiBold" Foreground="White"/><TextBlock x:Name="Subtitle" Text="Choose a detector to start a local scan" FontSize="12" Foreground="#91ABC8" Margin="0,6,0,0"/></StackPanel><TextBox x:Name="SearchBox" HorizontalAlignment="Right" VerticalAlignment="Top" Width="205" Height="33" Background="#172B43" Foreground="White" BorderBrush="#315779" Padding="8,5" ToolTip="Search detectors"/></Grid>
-   <Border Grid.Row="1" Background="#0E1B2C" BorderBrush="#24405D" BorderThickness="1" CornerRadius="8"><ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="Cards" Margin="10"/></ScrollViewer></Border>
-   <Border Grid.Row="3" Background="#080F1B" BorderBrush="#24405D" BorderThickness="1" CornerRadius="8" Padding="12"><DockPanel><TextBlock DockPanel.Dock="Top" Text="ACTIVITY CONSOLE" Foreground="#46A8FF" FontWeight="Bold" FontSize="11" Margin="0,0,0,8"/><TextBox x:Name="Activity" IsReadOnly="True" BorderThickness="0" Background="Transparent" Foreground="#B4D9FF" FontFamily="Consolas" FontSize="11" VerticalScrollBarVisibility="Auto"/></DockPanel></Border>
-  </Grid>
- </Grid>
-</Window>
-'@
-$reader = New-Object System.Xml.XmlNodeReader $xaml
-$window = [Windows.Markup.XamlReader]::Load($reader)
-$nav=$window.FindName('NavItems'); $cards=$window.FindName('Cards'); $activity=$window.FindName('Activity'); $heading=$window.FindName('Heading'); $subtitle=$window.FindName('Subtitle'); $search=$window.FindName('SearchBox')
-function Write-Activity([string]$msg) { $activity.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $msg`r`n"); $activity.ScrollToEnd() }
-function Open-Detector($entry) {
- $permission = [Windows.MessageBox]::Show("Run the read-only '$($entry.Name)' scan on this computer?`n`nOnly scan devices you own or have permission to inspect.", 'Permission required', 'YesNo', 'Question')
- if ($permission -ne 'Yes') { return }
- $popup = New-Object System.Windows.Window
- $popup.Title=$entry.Name; $popup.Width=740; $popup.Height=510; $popup.MinWidth=520; $popup.MinHeight=340; $popup.WindowStartupLocation='CenterOwner'; $popup.Owner=$window
- $popup.Background=[Windows.Media.BrushConverter]::new().ConvertFromString('#0B1422')
- $panel = New-Object System.Windows.Controls.Grid
- $panel.Margin='20'
- foreach ($h in @('Auto','Auto','*','Auto')) { $r=New-Object System.Windows.Controls.RowDefinition; $r.Height= if ($h -eq '*') { [Windows.GridLength]::new(1,[Windows.GridUnitType]::Star) } else { [Windows.GridLength]::Auto }; [void]$panel.RowDefinitions.Add($r) }
- $header=New-Object System.Windows.Controls.TextBlock; $header.Text=$entry.Name; $header.FontSize=22; $header.FontWeight='SemiBold'; $header.Foreground=[Windows.Media.Brushes]::White; $header.Margin='0,0,0,15'; [Windows.Controls.Grid]::SetRow($header,0); [void]$panel.Children.Add($header)
- $bar=New-Object System.Windows.Controls.ProgressBar; $bar.Height=6; $bar.Minimum=0; $bar.Maximum=100; $bar.Value=0; $bar.Foreground=[Windows.Media.BrushConverter]::new().ConvertFromString('#289EFF'); $bar.Margin='0,0,0,15'; [Windows.Controls.Grid]::SetRow($bar,1); [void]$panel.Children.Add($bar)
- $output=New-Object System.Windows.Controls.TextBox; $output.IsReadOnly=$true; $output.AcceptsReturn=$true; $output.VerticalScrollBarVisibility='Auto'; $output.TextWrapping='NoWrap'; $output.Background=[Windows.Media.BrushConverter]::new().ConvertFromString('#101F32'); $output.Foreground=[Windows.Media.BrushConverter]::new().ConvertFromString('#B8DEFF'); $output.BorderThickness='0'; $output.FontFamily='Consolas'; $output.FontSize=12; $output.Padding='12'; [Windows.Controls.Grid]::SetRow($output,2); [void]$panel.Children.Add($output)
- $save=New-Object System.Windows.Controls.Button; $save.Content='Save Results'; $save.Width=130; $save.Height=34; $save.HorizontalAlignment='Right'; $save.Margin='0,14,0,0'; $save.Background=[Windows.Media.BrushConverter]::new().ConvertFromString('#147BD1'); $save.Foreground=[Windows.Media.Brushes]::White; $save.BorderThickness='0'; [Windows.Controls.Grid]::SetRow($save,3); [void]$panel.Children.Add($save)
- $save.Add_Click({ $dialog=New-Object Microsoft.Win32.SaveFileDialog; $dialog.Filter='Text files (*.txt)|*.txt'; $dialog.FileName='YungyScan.txt'; if ($dialog.ShowDialog($popup)) { [IO.File]::WriteAllText($dialog.FileName,$output.Text,[Text.Encoding]::UTF8) } }.GetNewClosure())
- $popup.Content=$panel
- $popup.Tag=$entry
- $output.Text="Scanning $($entry.Name)...`r`n`r`n"
- $popup.Add_ContentRendered({
-  try { $scanEntry = $popup.Tag; $result = @(Get-ScanLines $scanEntry.Id); $output.Text = "YUNGY SS TOOL - $($scanEntry.Name)`r`nRead-only results; matches are not proof of wrongdoing.`r`n`r`n" + ($result -join "`r`n"); $bar.Value=100; Write-Activity "Completed: $($scanEntry.Name) ($($result.Count) lines)" }
-  catch { $output.Text="Error: $($_.Exception.Message)"; Write-Activity "Scan failed: $($entry.Name)" }
- }.GetNewClosure())
- Write-Activity "Started: $($entry.Name)"
- [void]$popup.ShowDialog()
-}
-function Show-Page([string]$category) {
- $cards.Children.Clear(); $heading.Text=$category
- $term=$search.Text
- $matches=@($script:checks | Where-Object { ($category -eq 'All Detectors' -or $_.Category -eq $category) -and ([string]::IsNullOrWhiteSpace($term) -or $_.Name.IndexOf($term,[StringComparison]::OrdinalIgnoreCase) -ge 0 -or $_.Description.IndexOf($term,[StringComparison]::OrdinalIgnoreCase) -ge 0) })
- $subtitle.Text="$($matches.Count) local detectors | Click a card to scan"
- foreach ($entry in $matches) {
-  $button=New-Object System.Windows.Controls.Button; $button.Style=$window.FindResource('Tile'); $button.Tag=$entry
-  $stack=New-Object System.Windows.Controls.StackPanel
-  $name=New-Object System.Windows.Controls.TextBlock; $name.Text=$entry.Name; $name.FontWeight='SemiBold'; $name.FontSize=14; $name.TextTrimming='CharacterEllipsis'
-  $desc=New-Object System.Windows.Controls.TextBlock; $desc.Text=$entry.Description; $desc.Foreground=[Windows.Media.Brushes]::LightSteelBlue; $desc.FontSize=11; $desc.TextWrapping='Wrap'; $desc.Margin='0,8,0,0'
-  [void]$stack.Children.Add($name); [void]$stack.Children.Add($desc); $button.Content=$stack
-  $button.Add_Click({ Open-Detector $this.Tag }.GetNewClosure()); [void]$cards.Children.Add($button)
- }
-}
-foreach ($cat in @('All Detectors','Minecraft','Macro','Windows')) {
- $button=New-Object System.Windows.Controls.Button; $button.Content="  $cat"; $button.Style=$window.FindResource('Nav'); $button.Tag=$cat
- $button.Add_Click({ $script:current=[string]$this.Tag; Show-Page $script:current }.GetNewClosure()); [void]$nav.Children.Add($button)
-}
-$script:current='All Detectors'
-$search.Add_TextChanged({ Show-Page $script:current })
-Write-Activity 'Ready. All detectors are local; no catalogue download.'
-Show-Page 'All Detectors'
-[void]$window.ShowDialog()
