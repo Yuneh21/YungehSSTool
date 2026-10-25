@@ -1,431 +1,123 @@
-
-# Yungeh SS Tool - Black & Blue Edition
-# Local, read-only diagnostics. Windows PowerShell 5.1.
-
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-[System.Windows.Forms.Application]::EnableVisualStyles()
-
-function C([string]$hex) {
-    [System.Drawing.ColorTranslator]::FromHtml($hex)
-}
-
-$bg = C '#090F1C'
-$panel = C '#101D30'
-$tile = C '#192C45'
-$blue = C '#168BFF'
-$white = C '#EFF7FF'
-$muted = C '#A4B8D1'
-$green = C '#73D7FF'
-
-$script:permission = $false
-$script:mainLog = $null
-
-function WriteLog([string]$message) {
-    if ($script:mainLog) {
-        $script:mainLog.AppendText(
-            "[$(Get-Date -Format 'HH:mm:ss')] $message`r`n"
-        )
+    foreach ($folder in @('Downloads','Desktop')) {
+     $dir = Join-Path $env:USERPROFILE $folder
+     $lines.Add("--- $folder ---")
+     if (Test-Path -LiteralPath $dir) {
+      $files = @(Get-ChildItem -LiteralPath $dir -File -Filter '*.jar' -ErrorAction SilentlyContinue | Select-Object -First 100)
+      foreach ($f in $files) { $lines.Add($f.Name) }
+      if ($files.Count -eq 0) { $lines.Add('No JAR files found.') }
+     } else { $lines.Add('Folder not found.') }
     }
+   }
+   'versions' {
+    $dir = Join-Path $env:APPDATA '.minecraft\versions'
+    if (Test-Path -LiteralPath $dir) { foreach ($f in (Get-ChildItem -LiteralPath $dir -Directory -ErrorAction SilentlyContinue)) { $lines.Add($f.Name) } }
+    else { $lines.Add('Versions folder not found.') }
+   }
+   'logs' {
+    $dir = Join-Path $env:APPDATA '.minecraft\logs'
+    if (Test-Path -LiteralPath $dir) { foreach ($f in (Get-ChildItem -LiteralPath $dir -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 30)) { $lines.Add("$($f.LastWriteTime.ToString('yyyy-MM-dd HH:mm'))  $($f.Name)") } }
+    else { $lines.Add('Logs folder not found.') }
+   }
+   'minecraftprocess' {
+    foreach ($proc in (Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match 'minecraft|javaw|java|lunar|badlion|prismlauncher|multimc' } | Sort-Object ProcessName)) { $lines.Add("$($proc.ProcessName)  PID $($proc.Id)") }
+   }
+   'macro' {
+    foreach ($proc in (Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match 'autohotkey|autoit|macro|pulover|tinytask' } | Sort-Object ProcessName)) { $lines.Add("$($proc.ProcessName)  PID $($proc.Id)") }
+   }
+   'peripheral' {
+    foreach ($proc in (Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match 'ghub|lghub|razer|synapse|icue|steelseries|roccat|logitech' } | Sort-Object ProcessName)) { $lines.Add("$($proc.ProcessName)  PID $($proc.Id)") }
+   }
+   'java' {
+    foreach ($proc in (Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match '^javaw?$' })) { $lines.Add("$($proc.ProcessName)  PID $($proc.Id)") }
+   }
+   'processes' {
+    foreach ($proc in (Get-Process -ErrorAction SilentlyContinue | Sort-Object ProcessName | Select-Object -First 200)) { $lines.Add("$($proc.ProcessName)  PID $($proc.Id)") }
+   }
+   'downloads' {
+    $dir = Join-Path $env:USERPROFILE 'Downloads'
+    if (Test-Path -LiteralPath $dir) { foreach ($f in (Get-ChildItem -LiteralPath $dir -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 40)) { $lines.Add("$($f.LastWriteTime.ToString('yyyy-MM-dd'))  $($f.Name)") } }
+   }
+   'startup' {
+    foreach ($entry in (Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue | Select-Object -First 100)) { $lines.Add($entry.Name) }
+   }
+   'system' {
+    $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+    $lines.Add("Computer: $env:COMPUTERNAME")
+    $lines.Add("OS: $($os.Caption)")
+    $lines.Add("Version: $($os.Version)")
+    $lines.Add("Last boot: $($os.LastBootUpTime)")
+   }
+   default { $lines.Add('Unknown detector.') }
+  }
+ } catch { $lines.Add("Scan error: $($_.Exception.Message)") }
+ if ($lines.Count -eq 0) { $lines.Add('No matching entries found. This does not prove anything about software use.') }
+ return $lines.ToArray()
 }
 
-function MakeLabel($parent, $text, $x, $y, $w, $h, $size, $color) {
-    $label = New-Object System.Windows.Forms.Label
-    $label.Text = $text
-    $label.SetBounds($x, $y, $w, $h)
-    $label.ForeColor = $color
-    $label.Font = New-Object System.Drawing.Font('Segoe UI', $size)
-    $parent.Controls.Add($label)
-    return $label
+[xml]$xaml = @'
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Yungy SS Tool" Width="1130" Height="730" MinWidth="890" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#080D17" FontFamily="Segoe UI">
+ <Window.Resources>
+  <Style x:Key="Nav" TargetType="Button"><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="#B6CBE6"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Height" Value="46"/><Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="Padding" Value="17,0"/><Setter Property="Margin" Value="0,3"/><Setter Property="Cursor" Value="Hand"/><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#183456"/></Trigger></Style.Triggers></Style>
+  <Style x:Key="Tile" TargetType="Button"><Setter Property="Background" Value="#12233A"/><Setter Property="Foreground" Value="White"/><Setter Property="BorderBrush" Value="#294B71"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="15"/><Setter Property="Width" Value="253"/><Setter Property="Height" Value="108"/><Setter Property="Margin" Value="7"/><Setter Property="Cursor" Value="Hand"/><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#1C3858"/><Setter Property="BorderBrush" Value="#39A3FF"/></Trigger></Style.Triggers></Style>
+ </Window.Resources>
+ <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="218"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <Border Background="#101A2B" BorderBrush="#294260" BorderThickness="0,0,1,0"><DockPanel Margin="13"><StackPanel DockPanel.Dock="Top" Margin="5,16,5,22"><TextBlock Text="Y / YUNGY" Foreground="#3CA6FF" FontSize="26" FontWeight="Bold"/><TextBlock Text="SS TOOL  /  DETECTORS" Foreground="#8AA8C9" FontSize="10" Margin="1,5,0,0"/><Border Height="2" Background="#238FFF" Margin="0,18,0,0"/></StackPanel><StackPanel DockPanel.Dock="Bottom" Margin="8,10"><TextBlock Text="LOCAL SCANS" Foreground="#4CAFFF" FontWeight="Bold" FontSize="11"/><TextBlock Text="Read-only. Owner permission required." Foreground="#8DA7C6" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0"/></StackPanel><StackPanel x:Name="NavItems"/></DockPanel></Border>
+  <Grid Grid.Column="1" Margin="22,19,22,16"><Grid.RowDefinitions><RowDefinition Height="79"/><RowDefinition Height="*"/><RowDefinition Height="12"/><RowDefinition Height="135"/></Grid.RowDefinitions>
+   <Grid Grid.Row="0"><StackPanel><TextBlock x:Name="Heading" Text="All Detectors" FontSize="26" FontWeight="SemiBold" Foreground="White"/><TextBlock x:Name="Subtitle" Text="Choose a detector to start a local scan" FontSize="12" Foreground="#91ABC8" Margin="0,6,0,0"/></StackPanel><TextBox x:Name="SearchBox" HorizontalAlignment="Right" VerticalAlignment="Top" Width="205" Height="33" Background="#172B43" Foreground="White" BorderBrush="#315779" Padding="8,5" ToolTip="Search detectors"/></Grid>
+   <Border Grid.Row="1" Background="#0E1B2C" BorderBrush="#24405D" BorderThickness="1" CornerRadius="8"><ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="Cards" Margin="10"/></ScrollViewer></Border>
+   <Border Grid.Row="3" Background="#080F1B" BorderBrush="#24405D" BorderThickness="1" CornerRadius="8" Padding="12"><DockPanel><TextBlock DockPanel.Dock="Top" Text="ACTIVITY CONSOLE" Foreground="#46A8FF" FontWeight="Bold" FontSize="11" Margin="0,0,0,8"/><TextBox x:Name="Activity" IsReadOnly="True" BorderThickness="0" Background="Transparent" Foreground="#B4D9FF" FontFamily="Consolas" FontSize="11" VerticalScrollBarVisibility="Auto"/></DockPanel></Border>
+  </Grid>
+ </Grid>
+</Window>
+'@
+$reader = New-Object System.Xml.XmlNodeReader $xaml
+$window = [Windows.Markup.XamlReader]::Load($reader)
+$nav=$window.FindName('NavItems'); $cards=$window.FindName('Cards'); $activity=$window.FindName('Activity'); $heading=$window.FindName('Heading'); $subtitle=$window.FindName('Subtitle'); $search=$window.FindName('SearchBox')
+function Write-Activity([string]$msg) { $activity.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $msg`r`n"); $activity.ScrollToEnd() }
+function Open-Detector($entry) {
+ $permission = [Windows.MessageBox]::Show("Run the read-only '$($entry.Name)' scan on this computer?`n`nOnly scan devices you own or have permission to inspect.", 'Permission required', 'YesNo', 'Question')
+ if ($permission -ne 'Yes') { return }
+ $popup = New-Object System.Windows.Window
+ $popup.Title=$entry.Name; $popup.Width=740; $popup.Height=510; $popup.MinWidth=520; $popup.MinHeight=340; $popup.WindowStartupLocation='CenterOwner'; $popup.Owner=$window
+ $popup.Background=[Windows.Media.BrushConverter]::new().ConvertFromString('#0B1422')
+ $panel = New-Object System.Windows.Controls.Grid
+ $panel.Margin='20'
+ foreach ($h in @('Auto','Auto','*','Auto')) { $r=New-Object System.Windows.Controls.RowDefinition; $r.Height= if ($h -eq '*') { [Windows.GridLength]::new(1,[Windows.GridUnitType]::Star) } else { [Windows.GridLength]::Auto }; [void]$panel.RowDefinitions.Add($r) }
+ $header=New-Object System.Windows.Controls.TextBlock; $header.Text=$entry.Name; $header.FontSize=22; $header.FontWeight='SemiBold'; $header.Foreground=[Windows.Media.Brushes]::White; $header.Margin='0,0,0,15'; [Windows.Controls.Grid]::SetRow($header,0); [void]$panel.Children.Add($header)
+ $bar=New-Object System.Windows.Controls.ProgressBar; $bar.Height=6; $bar.Minimum=0; $bar.Maximum=100; $bar.Value=0; $bar.Foreground=[Windows.Media.BrushConverter]::new().ConvertFromString('#289EFF'); $bar.Margin='0,0,0,15'; [Windows.Controls.Grid]::SetRow($bar,1); [void]$panel.Children.Add($bar)
+ $output=New-Object System.Windows.Controls.TextBox; $output.IsReadOnly=$true; $output.AcceptsReturn=$true; $output.VerticalScrollBarVisibility='Auto'; $output.TextWrapping='NoWrap'; $output.Background=[Windows.Media.BrushConverter]::new().ConvertFromString('#101F32'); $output.Foreground=[Windows.Media.BrushConverter]::new().ConvertFromString('#B8DEFF'); $output.BorderThickness='0'; $output.FontFamily='Consolas'; $output.FontSize=12; $output.Padding='12'; [Windows.Controls.Grid]::SetRow($output,2); [void]$panel.Children.Add($output)
+ $save=New-Object System.Windows.Controls.Button; $save.Content='Save Results'; $save.Width=130; $save.Height=34; $save.HorizontalAlignment='Right'; $save.Margin='0,14,0,0'; $save.Background=[Windows.Media.BrushConverter]::new().ConvertFromString('#147BD1'); $save.Foreground=[Windows.Media.Brushes]::White; $save.BorderThickness='0'; [Windows.Controls.Grid]::SetRow($save,3); [void]$panel.Children.Add($save)
+ $save.Add_Click({ $dialog=New-Object Microsoft.Win32.SaveFileDialog; $dialog.Filter='Text files (*.txt)|*.txt'; $dialog.FileName='YungyScan.txt'; if ($dialog.ShowDialog($popup)) { [IO.File]::WriteAllText($dialog.FileName,$output.Text,[Text.Encoding]::UTF8) } }.GetNewClosure())
+ $popup.Content=$panel
+ $popup.Tag=$entry
+ $output.Text="Scanning $($entry.Name)...`r`n`r`n"
+ $popup.Add_ContentRendered({
+  try { $scanEntry = $popup.Tag; $result = @(Get-ScanLines $scanEntry.Id); $output.Text = "YUNGY SS TOOL - $($scanEntry.Name)`r`nRead-only results; matches are not proof of wrongdoing.`r`n`r`n" + ($result -join "`r`n"); $bar.Value=100; Write-Activity "Completed: $($scanEntry.Name) ($($result.Count) lines)" }
+  catch { $output.Text="Error: $($_.Exception.Message)"; Write-Activity "Scan failed: $($entry.Name)" }
+ }.GetNewClosure())
+ Write-Activity "Started: $($entry.Name)"
+ [void]$popup.ShowDialog()
 }
-
-function MakeButton($parent, $text, $x, $y, $w, $h, $color) {
-    $button = New-Object System.Windows.Forms.Button
-    $button.Text = $text
-    $button.SetBounds($x, $y, $w, $h)
-    $button.BackColor = $color
-    $button.ForeColor = $white
-    $button.FlatStyle = 'Flat'
-    $button.FlatAppearance.BorderSize = 0
-    $button.Cursor = 'Hand'
-    $parent.Controls.Add($button)
-    return $button
+function Show-Page([string]$category) {
+ $cards.Children.Clear(); $heading.Text=$category
+ $term=$search.Text
+ $matches=@($script:checks | Where-Object { ($category -eq 'All Detectors' -or $_.Category -eq $category) -and ([string]::IsNullOrWhiteSpace($term) -or $_.Name.IndexOf($term,[StringComparison]::OrdinalIgnoreCase) -ge 0 -or $_.Description.IndexOf($term,[StringComparison]::OrdinalIgnoreCase) -ge 0) })
+ $subtitle.Text="$($matches.Count) local detectors | Click a card to scan"
+ foreach ($entry in $matches) {
+  $button=New-Object System.Windows.Controls.Button; $button.Style=$window.FindResource('Tile'); $button.Tag=$entry
+  $stack=New-Object System.Windows.Controls.StackPanel
+  $name=New-Object System.Windows.Controls.TextBlock; $name.Text=$entry.Name; $name.FontWeight='SemiBold'; $name.FontSize=14; $name.TextTrimming='CharacterEllipsis'
+  $desc=New-Object System.Windows.Controls.TextBlock; $desc.Text=$entry.Description; $desc.Foreground=[Windows.Media.Brushes]::LightSteelBlue; $desc.FontSize=11; $desc.TextWrapping='Wrap'; $desc.Margin='0,8,0,0'
+  [void]$stack.Children.Add($name); [void]$stack.Children.Add($desc); $button.Content=$stack
+  $button.Add_Click({ Open-Detector $this.Tag }.GetNewClosure()); [void]$cards.Children.Add($button)
+ }
 }
-
-$script:detectors = [ordered]@{
-    'Minecraft' = @(
-        'Minecraft Processes',
-        'Installed Minecraft Mods',
-        'Outside Mods Folder',
-        'Minecraft Versions',
-        'Minecraft Logs'
-    )
-    'Macro Detectors' = @(
-        'Macro Software',
-        'Peripheral Software',
-        'Java Processes'
-    )
-    'Windows' = @(
-        'Running Processes',
-        'System Information',
-        'Java Executables'
-    )
+foreach ($cat in @('All Detectors','Minecraft','Macro','Windows')) {
+ $button=New-Object System.Windows.Controls.Button; $button.Content="  $cat"; $button.Style=$window.FindResource('Nav'); $button.Tag=$cat
+ $button.Add_Click({ $script:current=[string]$this.Tag; Show-Page $script:current }.GetNewClosure()); [void]$nav.Children.Add($button)
 }
-
-function Scan([string]$name) {
-    $out = New-Object 'System.Collections.Generic.List[string]'
-    $out.Add("YUNGEH SS TOOL | $name")
-    $out.Add("Started: $(Get-Date)")
-    $out.Add('Results are for review, not proof of cheating.')
-    $out.Add('---------------------------------------------')
-
-    try {
-        switch ($name) {
-            'Minecraft Processes' {
-                $pattern = 'javaw|java|minecraft|lunar|badlion|feather|prism|modrinth|curseforge'
-                $items = @(Get-Process -ErrorAction SilentlyContinue |
-                    Where-Object { $_.ProcessName -match $pattern })
-
-                if ($items.Count -eq 0) {
-                    $out.Add('No matching processes found.')
-                }
-
-                foreach ($item in $items) {
-                    $out.Add("FOUND: $($item.ProcessName) | PID $($item.Id)")
-                }
-            }
-
-            'Installed Minecraft Mods' {
-                $root = Join-Path $env:APPDATA '.minecraft\mods'
-                $out.Add("IN MINECRAFT MODS: $root")
-
-                if (Test-Path $root) {
-                    $items = @(Get-ChildItem $root -Filter '*.jar' -File -ErrorAction SilentlyContinue)
-                    if ($items.Count -eq 0) {
-                        $out.Add('No JAR files found.')
-                    }
-                    foreach ($item in $items) {
-                        $out.Add("FILE: $($item.Name)")
-                    }
-                } else {
-                    $out.Add('Minecraft mods folder not found.')
-                }
-            }
-
-            'Outside Mods Folder' {
-                $out.Add('NOT IN MINECRAFT MODS:')
-                $folders = @(
-                    [Environment]::GetFolderPath('Desktop'),
-                    (Join-Path $env:USERPROFILE 'Downloads')
-                )
-
-                foreach ($folder in $folders) {
-                    $out.Add("Checking: $folder")
-                    if (Test-Path $folder) {
-                        $items = @(Get-ChildItem $folder -File -ErrorAction SilentlyContinue |
-                            Where-Object { $_.Extension -in @('.jar', '.exe') } |
-                            Select-Object -First 100)
-
-                        foreach ($item in $items) {
-                            $out.Add("FILE: $($item.FullName)")
-                        }
-                    }
-                }
-                $out.Add('Only selected folders were checked. Files are not automatically cheats.')
-            }
-
-            'Minecraft Versions' {
-                $root = Join-Path $env:APPDATA '.minecraft\versions'
-                if (Test-Path $root) {
-                    Get-ChildItem $root -Directory -ErrorAction SilentlyContinue |
-                        Select-Object -First 100 |
-                        ForEach-Object { $out.Add($_.Name) }
-                } else {
-                    $out.Add('Versions folder not found.')
-                }
-            }
-
-            'Minecraft Logs' {
-                $root = Join-Path $env:APPDATA '.minecraft\logs'
-                if (Test-Path $root) {
-                    Get-ChildItem $root -File -ErrorAction SilentlyContinue |
-                        Select-Object -First 50 |
-                        ForEach-Object { $out.Add($_.Name) }
-                } else {
-                    $out.Add('Logs folder not found.')
-                }
-            }
-
-            'Macro Software' {
-                $pattern = 'autohotkey|autoit|tinytask|pulover|macrorecorder|keyran'
-                $items = @(Get-Process -ErrorAction SilentlyContinue |
-                    Where-Object { $_.ProcessName -match $pattern })
-
-                if ($items.Count -eq 0) {
-                    $out.Add('No matching macro software processes found.')
-                }
-
-                foreach ($item in $items) {
-                    $out.Add("REVIEW: $($item.ProcessName) | PID $($item.Id)")
-                }
-                $out.Add('Macro software can have legitimate uses.')
-            }
-
-            'Peripheral Software' {
-                $pattern = 'lghub|logioptions|razer|synapse|icue|steelseries'
-                $items = @(Get-Process -ErrorAction SilentlyContinue |
-                    Where-Object { $_.ProcessName -match $pattern })
-
-                if ($items.Count -eq 0) {
-                    $out.Add('No matching peripheral software found.')
-                }
-
-                foreach ($item in $items) {
-                    $out.Add("INFO: $($item.ProcessName)")
-                }
-            }
-
-            'Java Processes' {
-                $items = @(Get-Process -ErrorAction SilentlyContinue |
-                    Where-Object { $_.ProcessName -match '^javaw?$' })
-
-                if ($items.Count -eq 0) {
-                    $out.Add('No Java processes found.')
-                }
-
-                foreach ($item in $items) {
-                    $out.Add("JAVA: $($item.ProcessName) | PID $($item.Id)")
-                }
-            }
-
-            'Running Processes' {
-                Get-Process -ErrorAction SilentlyContinue |
-                    Sort-Object ProcessName |
-                    Select-Object -First 150 |
-                    ForEach-Object {
-                        $out.Add("$($_.ProcessName) | PID $($_.Id)")
-                    }
-            }
-
-            'System Information' {
-                $out.Add("Windows: $([Environment]::OSVersion.VersionString)")
-                $out.Add("PowerShell: $($PSVersionTable.PSVersion)")
-                $out.Add("64-bit Windows: $([Environment]::Is64BitOperatingSystem)")
-                $out.Add("Processors: $([Environment]::ProcessorCount)")
-            }
-
-            'Java Executables' {
-                $items = @(Get-Command java.exe, javaw.exe -ErrorAction SilentlyContinue)
-                if ($items.Count -eq 0) {
-                    $out.Add('Java not found on PATH.')
-                }
-                foreach ($item in $items) {
-                    $out.Add("JAVA: $($item.Source)")
-                }
-            }
-        }
-    } catch {
-        $out.Add("ERROR: $($_.Exception.Message)")
-    }
-
-    $out.Add('---------------------------------------------')
-    $out.Add('SCAN COMPLETE')
-    return $out.ToArray()
-}
-
-$form = New-Object System.Windows.Forms.Form
-$form.Text = 'Yungeh SS Tool - Black & Blue'
-$form.Size = New-Object System.Drawing.Size(1100, 740)
-$form.MinimumSize = New-Object System.Drawing.Size(900, 650)
-$form.StartPosition = 'CenterScreen'
-$form.BackColor = $bg
-
-$sidebar = New-Object System.Windows.Forms.Panel
-$sidebar.Dock = 'Left'
-$sidebar.Width = 230
-$sidebar.BackColor = $panel
-$form.Controls.Add($sidebar)
-
-$null = MakeLabel $sidebar 'YUNGEH' 20 25 200 50 27 $blue
-$null = MakeLabel $sidebar 'SS TOOL / DETECTORS' 22 80 200 30 10 $muted
-$null = MakeLabel $sidebar 'CATEGORIES' 20 135 200 30 10 $blue
-
-$main = New-Object System.Windows.Forms.Panel
-$main.Dock = 'Fill'
-$main.BackColor = $bg
-$form.Controls.Add($main)
-$main.BringToFront()
-
-$header = New-Object System.Windows.Forms.Panel
-$header.Dock = 'Top'
-$header.Height = 105
-$header.BackColor = $panel
-$main.Controls.Add($header)
-
-$script:pageTitle = MakeLabel $header 'Minecraft' 25 15 700 50 23 $white
-$null = MakeLabel $header 'Click a detector to open its scanner window.' 27 70 750 25 10 $muted
-
-$logPanel = New-Object System.Windows.Forms.Panel
-$logPanel.Dock = 'Bottom'
-$logPanel.Height = 180
-$logPanel.BackColor = C '#07101D'
-$main.Controls.Add($logPanel)
-
-$null = MakeLabel $logPanel 'ACTIVITY CONSOLE' 18 8 300 28 11 $blue
-
-$script:mainLog = New-Object System.Windows.Forms.TextBox
-$script:mainLog.Multiline = $true
-$script:mainLog.ReadOnly = $true
-$script:mainLog.ScrollBars = 'Vertical'
-$script:mainLog.Dock = 'Bottom'
-$script:mainLog.Height = 145
-$script:mainLog.BackColor = C '#07101D'
-$script:mainLog.ForeColor = $green
-$script:mainLog.BorderStyle = 'None'
-$script:mainLog.Font = New-Object System.Drawing.Font('Consolas', 9)
-$logPanel.Controls.Add($script:mainLog)
-
-$body = New-Object System.Windows.Forms.FlowLayoutPanel
-$body.Dock = 'Fill'
-$body.Padding = New-Object System.Windows.Forms.Padding(20)
-$body.AutoScroll = $true
-$body.BackColor = $bg
-$main.Controls.Add($body)
-$body.BringToFront()
-$header.BringToFront()
-$logPanel.BringToFront()
-
-function OpenDetector([string]$name) {
-    if (-not $script:permission) {
-        $answer = [System.Windows.Forms.MessageBox]::Show(
-            "Do you own this PC or have the owner's permission to scan it?",
-            'Permission Required',
-            'YesNo',
-            'Question'
-        )
-
-        if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            WriteLog 'Scan cancelled: permission not granted.'
-            return
-        }
-
-        $script:permission = $true
-    }
-
-    WriteLog "Opening detector: $name"
-
-    $win = New-Object System.Windows.Forms.Form
-    $win.Text = "Yungeh Scanner - $name"
-    $win.Size = New-Object System.Drawing.Size(700, 510)
-    $win.StartPosition = 'CenterParent'
-    $win.BackColor = C '#070D18'
-
-    $null = MakeLabel $win 'YUNGEH / SCANNER' 22 16 620 40 19 $blue
-    $null = MakeLabel $win $name 24 57 620 28 11 $white
-
-    $output = New-Object System.Windows.Forms.TextBox
-    $output.Multiline = $true
-    $output.ReadOnly = $true
-    $output.ScrollBars = 'Vertical'
-    $output.BackColor = C '#070D18'
-    $output.ForeColor = $green
-    $output.BorderStyle = 'None'
-    $output.Font = New-Object System.Drawing.Font('Consolas', 10)
-    $output.SetBounds(23, 105, 635, 280)
-    $output.Anchor = 'Top,Left,Right,Bottom'
-    $win.Controls.Add($output)
-
-    $bar = New-Object System.Windows.Forms.ProgressBar
-    $bar.SetBounds(23, 398, 635, 16)
-    $bar.Maximum = 100
-    $bar.Style = 'Continuous'
-    $bar.Anchor = 'Bottom,Left,Right'
-    $win.Controls.Add($bar)
-
-    $save = MakeButton $win 'SAVE RESULTS' 23 424 155 35 $tile
-    $save.Enabled = $false
-    $save.Anchor = 'Bottom,Left'
-
-    $close = MakeButton $win 'CLOSE' 544 424 114 35 $blue
-    $close.Anchor = 'Bottom,Right'
-    $close.Add_Click({ $win.Close() }.GetNewClosure())
-
-    $save.Add_Click({
-        $dialog = New-Object System.Windows.Forms.SaveFileDialog
-        $dialog.Filter = 'Text files (*.txt)|*.txt'
-        $dialog.FileName = 'YungehSS-Report.txt'
-
-        if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-            [System.IO.File]::WriteAllText($dialog.FileName, $output.Text)
-        }
-    }.GetNewClosure())
-
-    $lines = @(Scan $name)
-    $index = 0
-
-    $timer = New-Object System.Windows.Forms.Timer
-    $timer.Interval = 50
-
-    $timer.Add_Tick({
-        if ($index -lt $lines.Count) {
-            $output.AppendText($lines[$index] + "`r`n")
-            $index++
-            $bar.Value = [math]::Min(
-                100,
-                [int](100 * $index / [math]::Max(1, $lines.Count))
-            )
-        } else {
-            $timer.Stop()
-            $save.Enabled = $true
-            WriteLog "Completed detector: $name"
-        }
-    }.GetNewClosure())
-
-    $win.Add_Shown({ $timer.Start() }.GetNewClosure())
-    $win.Add_FormClosed({
-        $timer.Stop()
-        $timer.Dispose()
-    }.GetNewClosure())
-
-    [void]$win.ShowDialog($form)
-}
-
-function SetCategory([string]$category) {
-    $script:pageTitle.Text = $category
-    $body.Controls.Clear()
-
-    foreach ($detector in $script:detectors[$category]) {
-        $button = MakeButton $body "$detector  >" 0 0 350 78 $tile
-        $button.Margin = New-Object System.Windows.Forms.Padding(8)
-        $button.Tag = $detector
-
-        $button.Add_Click({
-            param($sender, $eventArgs)
-            OpenDetector ([string]$sender.Tag)
-        })
-    }
-
-    WriteLog "Selected category: $category"
-}
-
-$y = 175
-
-foreach ($category in $script:detectors.Keys) {
-    $button = MakeButton $sidebar $category 16 $y 196 52 $tile
-    $button.Tag = $category
-
-    $button.Add_Click({
-        param($sender, $eventArgs)
-        SetCategory ([string]$sender.Tag)
-    })
-
-    $y += 65
-}
-
-$null = MakeLabel $sidebar 'READ-ONLY / LOCAL' 20 570 200 30 10 $green
-$null = MakeLabel $sidebar 'Permission required' 20 605 200 25 9 $muted
-
-SetCategory 'Minecraft'
-WriteLog 'Yungeh SS Tool ready.'
-
-[void][System.Windows.Forms.Application]::Run($form)
+$script:current='All Detectors'
+$search.Add_TextChanged({ Show-Page $script:current })
+Write-Activity 'Ready. All detectors are local; no catalogue download.'
+Show-Page 'All Detectors'
+[void]$window.ShowDialog()
