@@ -94,3 +94,84 @@ function Get-ScanLines([string]$id) {
  </Window.Resources>
  <Grid>
   <Grid.ColumnDefinitions><ColumnDefinition Width="218"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <Border Grid.Column="0" Background="#101A2B" BorderBrush="#294260" BorderThickness="0,0,1,0">
+   <DockPanel Margin="13">
+    <StackPanel DockPanel.Dock="Top" Margin="5,16,5,22"><TextBlock Text="Y / YUNGY" Foreground="#3CA6FF" FontSize="26" FontWeight="Bold"/><TextBlock Text="SS TOOL  /  DETECTORS" Foreground="#8AA8C9" FontSize="10" Margin="1,5,0,0"/><Border Height="2" Background="#238FFF" Margin="0,18,0,0"/></StackPanel>
+    <StackPanel DockPanel.Dock="Bottom" Margin="8,10"><TextBlock Text="LOCAL SCANS" Foreground="#4CAFFF" FontWeight="Bold" FontSize="11"/><TextBlock Text="Read-only. Owner permission required." Foreground="#8DA7C6" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0"/></StackPanel>
+    <StackPanel x:Name="NavItems"/>
+   </DockPanel>
+  </Border>
+  <Grid Grid.Column="1" Margin="24,20,24,20">
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <TextBlock x:Name="PageTitle" Text="Minecraft Detectors" FontSize="27" FontWeight="Bold" Foreground="White"/>
+   <TextBlock Grid.Row="1" Text="Choose a detector. Results stay on this computer and are not uploaded." Foreground="#91AAC8" Margin="0,7,0,16" TextWrapping="Wrap"/>
+   <Grid Grid.Row="2">
+    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="200"/></Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="Tiles"/></ScrollViewer>
+    <Border Grid.Row="1" Background="#0D192B" BorderBrush="#2A4A6E" BorderThickness="1" CornerRadius="7" Padding="12" Margin="0,12,0,0">
+     <DockPanel>
+      <TextBlock x:Name="ResultHeading" DockPanel.Dock="Top" Text="Scan results" Foreground="#5CB5FF" FontWeight="Bold" FontSize="15" Margin="0,0,0,9"/>
+      <TextBox x:Name="Results" Background="Transparent" Foreground="#E1EAF7" BorderThickness="0" FontFamily="Consolas" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Text="Choose a detector to begin."/>
+     </DockPanel>
+    </Border>
+   </Grid>
+   <TextBlock Grid.Row="3" Text="Results are informational. A process name or JAR filename alone is not proof of cheating." Foreground="#8198B5" Margin="0,13,0,0" TextWrapping="Wrap"/>
+  </Grid>
+ </Grid>
+</Window>
+'@
+
+$reader = New-Object System.Xml.XmlNodeReader($xaml)
+$window = [Windows.Markup.XamlReader]::Load($reader)
+$nav = $window.FindName('NavItems')
+$tiles = $window.FindName('Tiles')
+$title = $window.FindName('PageTitle')
+$results = $window.FindName('Results')
+$heading = $window.FindName('ResultHeading')
+
+$script:ShowCategory = {
+ param([string]$category)
+ $title.Text = "$category Detectors"
+ $tiles.Children.Clear()
+ foreach ($check in @($script:checks | Where-Object { $_.Category -eq $category })) {
+  $button = New-Object System.Windows.Controls.Button
+  $button.Style = $window.FindResource('Tile')
+  $button.Tag = $check.Id
+  $panel = New-Object System.Windows.Controls.StackPanel
+  $name = New-Object System.Windows.Controls.TextBlock
+  $name.Text = $check.Name
+  $name.FontSize = 15
+  $name.FontWeight = 'Bold'
+  $name.TextWrapping = 'Wrap'
+  $desc = New-Object System.Windows.Controls.TextBlock
+  $desc.Text = $check.Description
+  $desc.Foreground = [Windows.Media.Brushes]::LightSteelBlue
+  $desc.FontSize = 11
+  $desc.Margin = '0,7,0,0'
+  $desc.TextWrapping = 'Wrap'
+  [void]$panel.Children.Add($name)
+  [void]$panel.Children.Add($desc)
+  $button.Content = $panel
+  $button.Add_Click({
+   param($sender, $eventArgs)
+   $id = [string]$sender.Tag
+   $selected = $script:checks | Where-Object { $_.Id -eq $id } | Select-Object -First 1
+   $heading.Text = $selected.Name
+   $results.Text = 'Scanning...'
+   try { $results.Text = (Get-ScanLines $id) -join [Environment]::NewLine }
+   catch { $results.Text = "Scan error: $($_.Exception.Message)" }
+  })
+  [void]$tiles.Children.Add($button)
+ }
+}
+
+foreach ($category in @('Minecraft','Macro','Windows')) {
+ $button = New-Object System.Windows.Controls.Button
+ $button.Style = $window.FindResource('Nav')
+ $button.Content = "  $category"
+ $button.Tag = $category
+ $button.Add_Click({ param($sender, $eventArgs) & $script:ShowCategory ([string]$sender.Tag) })
+ [void]$nav.Children.Add($button)
+}
+& $script:ShowCategory 'Minecraft'
+[void]$window.ShowDialog()
