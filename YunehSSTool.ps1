@@ -223,7 +223,9 @@ function Test-ScriptLaunchAllowed([string]$path) {
    if($policy -eq 'Restricted' -or $signature.Status -ne 'Valid') {
      $reason = if($policy -eq 'Restricted') { 'PowerShell scripts are disabled on this computer.' } else { 'This script does not have a valid trusted signature.' }
      Write-Activity "Blocked by Windows policy: $([IO.Path]::GetFileName($path)) ($policy)"
-     [void][Windows.MessageBox]::Show("$reason`n`nUtility: $([IO.Path]::GetFileName($path))`nPolicy: $policy`n`nYunehSSTool will not change Windows security settings. Ask the utility developer for a signed or standalone version.", 'YunehSSTool - Script Blocked', 'OK', 'Warning')
+     $policies = (Get-ExecutionPolicy -List | Out-String).Trim()
+     $details = "$reason`n`nUtility: $([IO.Path]::GetFileName($path))`nEffective policy: $policy`n`nPolicy scopes:`n$policies`n`nThis is a PowerShell execution-policy restriction, not an anti-cheat detection. Do not disable antivirus or anti-cheat. On a PC you own or administer, review the script and Windows policy settings, or request a signed version from the developer."
+     [void][Windows.MessageBox]::Show($details, 'YunehSSTool - Script Blocked', 'OK', 'Warning')
      return $false
    }
  }
