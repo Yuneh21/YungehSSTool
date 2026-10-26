@@ -175,32 +175,49 @@ function Show-Tools {
       Write-Activity "Launched $($selected.Name)"
       return
     }
-    # Direct ZIP URLs can be downloaded; GitHub repositories are resolved via public release metadata.
-    $zipUrl = $null
-    if($uri.AbsolutePath -match '(?i)\.zip$') { $zipUrl = $t.Url }
-    elseif($uri.Host -eq 'github.com' -and $uri.AbsolutePath -match '^/([^/]+)/([^/]+)/?$') {
+    # Resolve release assets and repository-hosted binaries without assuming every repo has releases.
+    $downloadUrl = $null
+    $downloadName = $null
+    if($uri.AbsolutePath -match '(?i)\.(zip|exe)$') {
+      $downloadUrl = $t.Url
+      $downloadName = [IO.Path]::GetFileName($uri.AbsolutePath)
+    } elseif($uri.Host -eq 'github.com' -and $uri.AbsolutePath -match '^/([^/]+)/([^/]+)/?$') {
       $owner = $Matches[1]; $repo = $Matches[2]
+      $headers = @{'User-Agent'='YunehSSTool'; 'Accept'='application/vnd.github+json'}
       try {
-        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/releases/latest" -Headers @{'User-Agent'='YunehSSTool'} -TimeoutSec 15
-        $asset = @($release.assets | Where-Object { $_.name -match '(?i)\.(zip)$' -and $_.name -notmatch '(?i)(source|src|debug|symbols)' }) | Select-Object -First 1
-        if($asset) { $zipUrl = [string]$asset.browser_download_url }
-      } catch { Write-Activity "No usable GitHub release found for $($t.Name)" }
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/releases/latest" -Headers $headers -TimeoutSec 15
+        $asset = @($release.assets | Where-Object { $_.name -match '(?i)\.(zip|exe)$' -and $_.name -notmatch '(?i)(source|src|debug|symbols)' } | Sort-Object @{Expression={if($_.name -match '(?i)\.zip$'){0}else{1}}}) | Select-Object -First 1
+        if($asset) { $downloadUrl = [string]$asset.browser_download_url; $downloadName = [string]$asset.name }
+      } catch { Write-Activity "No GitHub release asset for $($t.Name); checking repository files." }
+      if(-not $downloadUrl) {
+        try {
+          $tree = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/git/trees/HEAD?recursive=1" -Headers $headers -TimeoutSec 15
+          $file = @($tree.tree | Where-Object { $_.type -eq 'blob' -and $_.path -match '(?i)\.(zip|exe)$' -and $_.path -notmatch '(?i)(debug|symbols|test|sample)' } | Sort-Object @{Expression={if([IO.Path]::GetFileNameWithoutExtension($_.path) -eq $t.Name){0}else{1}}}) | Select-Object -First 1
+          if($file) {
+            $encodedPath = ($file.path -split '/' | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
+            $branch = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo" -Headers $headers -TimeoutSec 15
+            $downloadUrl = "https://raw.githubusercontent.com/$owner/$repo/$($branch.default_branch)/$encodedPath"
+            $downloadName = [IO.Path]::GetFileName($file.path)
+          }
+        } catch { Write-Activity "Could not resolve repository binaries: $($_.Exception.Message)" }
+      }
     }
-    if(-not $zipUrl) {
-      Write-Activity "No verified direct ZIP download for $($t.Name)"
-      $choice = [Windows.MessageBox]::Show("No supported direct ZIP download was found for $($t.Name).`n`nOpen the developer page to install it manually?",'YunehSSTool','YesNo','Question')
+    if(-not $downloadUrl) {
+      Write-Activity "No downloadable EXE/ZIP found for $($t.Name)"
+      $choice = [Windows.MessageBox]::Show("No downloadable executable or ZIP could be located for $($t.Name).`n`nOpen the developer page to review installation options?",'YunehSSTool','YesNo','Question')
       if($choice -eq 'Yes') { Start-Process -FilePath $t.Url }
       return
     }
-    $choice = [Windows.MessageBox]::Show("Download $($t.Name) from:`n$zipUrl`n`nIt will be saved under your AppData folder. Files will NOT be executed automatically.",'YunehSSTool','YesNo','Question')
+    $choice = [Windows.MessageBox]::Show("Download $downloadName for $($t.Name)?`n`nSource: $downloadUrl`n`nThe file will be saved locally for review and WILL NOT run automatically.",'YunehSSTool','YesNo','Question')
     if($choice -ne 'Yes') { Write-Activity "Download cancelled: $($t.Name)"; return }
     [IO.Directory]::CreateDirectory($folder) | Out-Null
-    $archive = Join-Path $folder 'download.zip'
-    Write-Activity "Downloading $($t.Name)..."
-    try {
-      Invoke-WebRequest -Uri $zipUrl -OutFile $archive -UseBasicParsing -TimeoutSec 90 -ErrorAction Stop
+    $downloadPath = Join-Path $folder $downloadName
+    Write-Activity "Downloading $downloadName..."
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -UseBasicParsing -TimeoutSec 120 -ErrorAction Stop
+    if((Get-Item -LiteralPath $downloadPath).Length -lt 100) { throw 'Downloaded file is unexpectedly small.' }
+    if($downloadName -match '(?i)\.zip$') {
       Add-Type -AssemblyName System.IO.Compression.FileSystem
-      $z = [IO.Compression.ZipFile]::OpenRead($archive)
+      $z = [IO.Compression.ZipFile]::OpenRead($downloadPath)
       try {
         foreach($entry in $z.Entries) {
           $target = [IO.Path]::GetFullPath((Join-Path $folder $entry.FullName))
@@ -208,11 +225,12 @@ function Show-Tools {
           if(-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe ZIP entry path.' }
         }
       } finally { $z.Dispose() }
-      [IO.Compression.ZipFile]::ExtractToDirectory($archive,$folder)
-      Write-Activity "Downloaded $($t.Name) to $folder"
-      [void][Windows.MessageBox]::Show("$($t.Name) downloaded. Review its contents before running it. Click its button again to launch an installed executable.",'YunehSSTool','OK','Information')
-      Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
-    } finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
+      [IO.Compression.ZipFile]::ExtractToDirectory($downloadPath,$folder)
+    }
+    $hash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
+    Write-Activity "Saved $downloadName | SHA256: $hash"
+    [void][Windows.MessageBox]::Show("Downloaded $downloadName.`n`nSHA256: $hash`n`nReview the file before launching. Click its tool button again to launch with confirmation.",'YunehSSTool','OK','Information')
+    Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
 
    } catch {
     Write-Activity "ERROR with $($t.Name): $($_.Exception.Message)"
