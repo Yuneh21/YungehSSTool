@@ -1,5 +1,4 @@
 # YunehSSTool - redesigned independent catalogue inspired by CheesySSTool
-# Credits for tool discovery: https://github.com/cheesecatlol/CheesySSTool
 # Downloads only after user chooses a save location. No background scans, uploads or remote script execution.
 # External utilities remain the work of their respective authors.
 Add-Type -AssemblyName PresentationFramework
@@ -96,7 +95,7 @@ $tools = @(
  <Grid.ColumnDefinitions><ColumnDefinition Width="225"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
  <Border Background="#0D1D2D" BorderBrush="#284B6D" BorderThickness="0,0,1,0"><DockPanel Margin="12">
  <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><TextBlock Text="Y." FontSize="43" FontWeight="Bold" Foreground="#70CAFF"/><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#7FBCE8" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
- <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#91C6E9" FontSize="11"/><TextBlock Text="Official pages open in your browser. Direct ZIP downloads require your confirmation. Nothing executes automatically." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
+ <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#91C6E9" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require consent and review before execution." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
  </DockPanel></Border>
  <Grid Grid.Column="1" Margin="20,17,20,16">
@@ -134,7 +133,7 @@ function Show-Tools {
  $heading.Text = $script:category
  $q = $search.Text.Trim()
  $matches = @($tools | Where-Object {($script:category -eq 'All utilities' -or $_.Category -eq $script:category) -and ($q.Length -eq 0 -or $_.Name.IndexOf($q,[StringComparison]::OrdinalIgnoreCase) -ge 0)})
- $count.Text = "$($matches.Count) tools | Select a utility to open its official page or save its ZIP"
+ $count.Text = "$($matches.Count) tools | Click a utility to launch a previously downloaded copy or install it"
  foreach($tool in $matches) {
   $b = New-Object Windows.Controls.Button
   $b.Style = $window.FindResource('DarkButton')
@@ -150,36 +149,71 @@ function Show-Tools {
    try {
     $uri = [Uri]$t.Url
     if($uri.Scheme -ne 'https'){ throw 'Only HTTPS links are permitted.' }
-    if($uri.AbsolutePath -match '(?i)\.zip$') {
-     $choice = [Windows.MessageBox]::Show("Save the ZIP for $($t.Name)?`n`nSource: $($t.Url)`n`nThe ZIP will not be opened or executed automatically.", 'YunehSSTool Download', 'YesNo', 'Question')
-     if($choice -ne 'Yes'){ Write-Activity "Cancelled: $($t.Name)"; return }
-     $dialog = New-Object System.Windows.Forms.SaveFileDialog
-     $dialog.Filter = 'ZIP archives (*.zip)|*.zip'
-     $dialog.FileName = ([IO.Path]::GetFileName($uri.AbsolutePath))
-     $dialog.Title = "Save $($t.Name) ZIP"
-     if($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK){ Write-Activity "Save cancelled: $($t.Name)"; return }
-     Write-Activity "Downloading $($t.Name)..."
-     $client = New-Object System.Net.WebClient
-     try {
-      $client.DownloadFile($uri, $dialog.FileName)
-      $file = Get-Item -LiteralPath $dialog.FileName -ErrorAction Stop
-      if($file.Length -lt 4){ throw 'The downloaded file is empty or incomplete.' }
-      $stream = [IO.File]::OpenRead($dialog.FileName)
-      try { $magic = New-Object byte[] 2; [void]$stream.Read($magic,0,2) }
-      finally { $stream.Dispose() }
-      if($magic[0] -ne 0x50 -or $magic[1] -ne 0x4B){ throw 'The server did not return a ZIP archive.' }
-      Write-Activity "Saved $($t.Name): $($dialog.FileName) ($($file.Length) bytes)"
-      [void][Windows.MessageBox]::Show("Saved ZIP successfully.`n`n$($dialog.FileName)`n`nReview files before running any programs.", 'YunehSSTool', 'OK', 'Information')
-     } catch {
-      Remove-Item -LiteralPath $dialog.FileName -ErrorAction SilentlyContinue
-      throw
-     } finally { $client.Dispose() }
-    } else {
-     $yes = [Windows.MessageBox]::Show("Open the developer's page for $($t.Name)?`n`n$($t.Url)`n`nNo program will start automatically.", 'YunehSSTool', 'YesNo', 'Question')
-     if($yes -ne 'Yes'){ Write-Activity "Cancelled: $($t.Name)"; return }
-     Start-Process -FilePath $t.Url
-     Write-Activity "Opened $($t.Name) project page"
+    $base = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'YunehSSTool\Utilities'
+    $folder = Join-Path $base ([regex]::Replace($t.Name,'[^a-zA-Z0-9_-]','_'))
+    $executables = @()
+    if(Test-Path -LiteralPath $folder) {
+      $executables = @(Get-ChildItem -LiteralPath $folder -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in @('.exe','.bat','.cmd','.ps1') })
     }
+    if($executables.Count -gt 0) {
+      $selected = $executables | Where-Object { $_.BaseName -eq $t.Name } | Select-Object -First 1
+      if(-not $selected -and $executables.Count -eq 1) { $selected = $executables[0] }
+      if(-not $selected) {
+        $names = ($executables | Select-Object -First 12 | ForEach-Object {$_.Name}) -join "`n"
+        Write-Activity "Multiple executables found for $($t.Name); opening folder for selection."
+        Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
+        [void][Windows.MessageBox]::Show("Several files found. Please review and run the correct file manually:`n`n$names",'YunehSSTool','OK','Information')
+        return
+      }
+      $answer = [Windows.MessageBox]::Show("Launch $($selected.Name)?`n`n$($selected.FullName)`n`nOnly run utilities you trust and have permission to use.",'YunehSSTool','YesNo','Question')
+      if($answer -ne 'Yes') { Write-Activity "Launch cancelled: $($t.Name)"; return }
+      if($selected.Extension -eq '.ps1') {
+        Start-Process powershell.exe -ArgumentList @('-NoProfile','-STA','-NoExit','-File',('"' + $selected.FullName + '"'))
+      } elseif($selected.Extension -in @('.cmd','.bat')) {
+        Start-Process cmd.exe -ArgumentList @('/k',('"' + $selected.FullName + '"'))
+      } else { Start-Process -FilePath $selected.FullName -WorkingDirectory $selected.DirectoryName }
+      Write-Activity "Launched $($selected.Name)"
+      return
+    }
+    # Direct ZIP URLs can be downloaded; GitHub repositories are resolved via public release metadata.
+    $zipUrl = $null
+    if($uri.AbsolutePath -match '(?i)\.zip$') { $zipUrl = $t.Url }
+    elseif($uri.Host -eq 'github.com' -and $uri.AbsolutePath -match '^/([^/]+)/([^/]+)/?$') {
+      $owner = $Matches[1]; $repo = $Matches[2]
+      try {
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/releases/latest" -Headers @{'User-Agent'='YunehSSTool'} -TimeoutSec 15
+        $asset = @($release.assets | Where-Object { $_.name -match '(?i)\.(zip)$' -and $_.name -notmatch '(?i)(source|src|debug|symbols)' }) | Select-Object -First 1
+        if($asset) { $zipUrl = [string]$asset.browser_download_url }
+      } catch { Write-Activity "No usable GitHub release found for $($t.Name)" }
+    }
+    if(-not $zipUrl) {
+      Write-Activity "No verified direct ZIP download for $($t.Name)"
+      $choice = [Windows.MessageBox]::Show("No supported direct ZIP download was found for $($t.Name).`n`nOpen the developer page to install it manually?",'YunehSSTool','YesNo','Question')
+      if($choice -eq 'Yes') { Start-Process -FilePath $t.Url }
+      return
+    }
+    $choice = [Windows.MessageBox]::Show("Download $($t.Name) from:`n$zipUrl`n`nIt will be saved under your AppData folder. Files will NOT be executed automatically.",'YunehSSTool','YesNo','Question')
+    if($choice -ne 'Yes') { Write-Activity "Download cancelled: $($t.Name)"; return }
+    [IO.Directory]::CreateDirectory($folder) | Out-Null
+    $archive = Join-Path $folder 'download.zip'
+    Write-Activity "Downloading $($t.Name)..."
+    try {
+      Invoke-WebRequest -Uri $zipUrl -OutFile $archive -UseBasicParsing -TimeoutSec 90 -ErrorAction Stop
+      Add-Type -AssemblyName System.IO.Compression.FileSystem
+      $z = [IO.Compression.ZipFile]::OpenRead($archive)
+      try {
+        foreach($entry in $z.Entries) {
+          $target = [IO.Path]::GetFullPath((Join-Path $folder $entry.FullName))
+          $prefix = [IO.Path]::GetFullPath($folder).TrimEnd('\') + '\'
+          if(-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe ZIP entry path.' }
+        }
+      } finally { $z.Dispose() }
+      [IO.Compression.ZipFile]::ExtractToDirectory($archive,$folder)
+      Write-Activity "Downloaded $($t.Name) to $folder"
+      [void][Windows.MessageBox]::Show("$($t.Name) downloaded. Review its contents before running it. Click its button again to launch an installed executable.",'YunehSSTool','OK','Information')
+      Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
+    } finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
+
    } catch {
     Write-Activity "ERROR with $($t.Name): $($_.Exception.Message)"
     [void][Windows.MessageBox]::Show("$($t.Name) failed:`n$($_.Exception.Message)", 'YunehSSTool Error', 'OK', 'Error')
@@ -201,6 +235,6 @@ foreach($cat in @('All utilities') + @($tools.Category | Sort-Object -Unique)) {
 $search.Add_TextChanged({Show-Tools})
 $window.FindName('Clear').Add_Click({$console.Clear();Write-Activity 'Console cleared'})
 Write-Activity "YunehSSTool ready: $($tools.Count) utility entries."
-Write-Activity 'Project links open in browser; direct ZIPs can be saved after confirmation. No utilities execute automatically.'
+Write-Activity 'Installed tools launch with confirmation; ZIPs download to AppData for review.'
 Show-Tools
 [void]$window.ShowDialog()
