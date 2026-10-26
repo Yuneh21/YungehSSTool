@@ -95,7 +95,7 @@ $tools = @(
  <Grid.ColumnDefinitions><ColumnDefinition Width="225"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
  <Border Background="#0D1D2D" BorderBrush="#284B6D" BorderThickness="0,0,1,0"><DockPanel Margin="12">
  <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><TextBlock Text="Y." FontSize="43" FontWeight="Bold" Foreground="#70CAFF"/><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#7FBCE8" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
- <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#91C6E9" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require consent and review before execution." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
+ <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#91C6E9" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
  </DockPanel></Border>
  <Grid Grid.Column="1" Margin="20,17,20,16">
@@ -208,7 +208,7 @@ function Show-Tools {
       if($choice -eq 'Yes') { Start-Process -FilePath $t.Url }
       return
     }
-    $choice = [Windows.MessageBox]::Show("Download $downloadName for $($t.Name)?`n`nSource: $downloadUrl`n`nThe file will be saved locally for review and WILL NOT run automatically.",'YunehSSTool','YesNo','Question')
+    $choice = [Windows.MessageBox]::Show("Download $downloadName for $($t.Name)?`n`nSource: $downloadUrl`n`nAfter downloading, you can choose to open the downloaded EXE.",'YunehSSTool','YesNo','Question')
     if($choice -ne 'Yes') { Write-Activity "Download cancelled: $($t.Name)"; return }
     [IO.Directory]::CreateDirectory($folder) | Out-Null
     $downloadPath = Join-Path $folder $downloadName
@@ -229,8 +229,30 @@ function Show-Tools {
     }
     $hash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
     Write-Activity "Saved $downloadName | SHA256: $hash"
-    [void][Windows.MessageBox]::Show("Downloaded $downloadName.`n`nSHA256: $hash`n`nReview the file before launching. Click its tool button again to launch with confirmation.",'YunehSSTool','OK','Information')
-    Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
+    # Never execute scripts or arbitrary first-file guesses from downloaded archives.
+    # For a single EXE, offer an immediate, explicit launch choice.
+    $candidates = @()
+    if($downloadName -match '(?i)\.exe$') {
+      $candidates = @(Get-Item -LiteralPath $downloadPath)
+    } elseif($downloadName -match '(?i)\.zip$') {
+      $candidates = @(Get-ChildItem -LiteralPath $folder -Recurse -File -Filter '*.exe' -ErrorAction SilentlyContinue)
+    }
+    if($candidates.Count -eq 1) {
+      $exe = $candidates[0]
+      $exeHash = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash
+      $sig = Get-AuthenticodeSignature -LiteralPath $exe.FullName
+      $publisher = if($sig.Status -eq 'Valid') { $sig.SignerCertificate.Subject } else { 'Unsigned or unverified' }
+      Write-Activity "Downloaded $downloadName | SHA256: $hash"
+      $run = [Windows.MessageBox]::Show("Download complete: $($t.Name)`n`nExecutable: $($exe.Name)`nPublisher: $publisher`nSHA256: $exeHash`n`nOpen this executable now? Only choose Yes if you trust its source.",'YunehSSTool','YesNo','Question')
+      if($run -eq 'Yes') {
+        Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -ErrorAction Stop
+        Write-Activity "Opened $($exe.Name)"
+      } else { Write-Activity "Saved $downloadName without launching" }
+    } else {
+      Write-Activity "Downloaded $downloadName | SHA256: $hash"
+      [void][Windows.MessageBox]::Show("Download saved. Found $($candidates.Count) EXE files.`n`nFor safety, select the correct program manually in the download folder.",'YunehSSTool','OK','Information')
+      Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
+    }
 
    } catch {
     Write-Activity "ERROR with $($t.Name): $($_.Exception.Message)"
