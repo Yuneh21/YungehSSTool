@@ -58,6 +58,7 @@ $extra = @(
  @('Minecraft','Mod metadata review','Reads mod IDs from fabric.mod.json in local JARs','metadata'),
  @('Minecraft','Mod SHA256 fingerprints','Computes local mod hashes for comparison','hashes'),
  @('Minecraft','Game directory inventory','Lists Minecraft folders and sizes','inventory'),
+ @('Minecraft','Client filename indicators','Highlights known client names in local mods; verify manually','indicators'),
  @('Windows','Prefetch file inventory','Lists Windows Prefetch filenames when accessible','prefetch'),
  @('Windows','Windows recent shortcuts','Lists recent shortcut filenames','recent'),
  @('Windows','Java runtime inventory','Lists installed Java commands and versions','javaruntime'),
@@ -66,6 +67,7 @@ $extra = @(
  @('Windows','USB device names','Lists connected USB device names','usb'),
  @('Windows','Macro script filenames','Finds AHK and AutoIt scripts in selected folders','scripts'),
  @('Yuneh Cheat finder','Mod Metadata Analyzer','Shows Fabric mod identifiers where available','metadata'),
+ @('Yuneh Cheat finder','Known Client Name Review','Filename-based indicators, not proof','indicators'),
  @('Yuneh Cheat finder','Macro Script Finder','Checks script filenames, not their content','scripts'),
  @('Yuneh Cheat finder','Launcher Folder Finder','Lists common launcher folders','launchers'),
  @('Yuneh Cheat finder','Mod Hash Viewer','Lists mod SHA256 hashes','hashes'),
@@ -116,20 +118,87 @@ function Get-YunehModFiles {
 # External investigation utilities listed by CheesySSTool (cheesecatlol).
 # Each opens its ORIGINAL developer's release page; no downloads or execution occur automatically.
 # Credits: https://github.com/cheesecatlol/CheesySSTool
+# Curated from the public CheesySSTool tool catalogue. Links open the original project.
+# No third-party executable is downloaded or executed without the user choosing it.
 $cheesyTools = @(
- @('Meow Mod Analyzer','Inspect Minecraft mod archives','https://github.com/MeowTonynoh/MeowModAnalyzer'),
- @('Meow Client Checker','Known cheat-client artefact utility','https://github.com/MeowTonynoh/MeowClientFucker/releases/latest'),
- @('RedLotus Mod Analyzer','Minecraft mod review utility','https://github.com/ItzIceHere/RedLotus-Mod-Analyzer/releases/latest'),
- @('Macro Detector','Macro and autoclicker artefact utility','https://github.com/NiccBlahh/MacroDetector'),
- @('JAR Parser','Java JAR execution artefact parser','https://github.com/Orbdiff/JARParser/releases/latest'),
- @('Strings Parser','String and signature analysis','https://github.com/Orbdiff/StringsParser/releases/latest'),
- @('Prefetch View','Windows prefetch analysis','https://github.com/Orbdiff/PrefetchView/releases/latest'),
- @('BAM Reveal','Windows execution artefact review','https://github.com/Orbdiff/BAMReveal/releases/latest'),
- @('Journal Parser','NTFS activity record analysis','https://github.com/Orbdiff/JournalParser/releases/latest'),
- @('Jarabel','JAR file inspection utility','https://github.com/nay-cat/Jarabel/releases/latest')
+ @('Orbdiff','PrefetchView','https://github.com/Orbdiff/PrefetchView')
+ @('Orbdiff','BAMReveal','https://github.com/Orbdiff/BAMReveal')
+ @('Orbdiff','StringsParser','https://github.com/Orbdiff/StringsParser')
+ @('Orbdiff','Fileless','https://github.com/Orbdiff/Fileless')
+ @('Orbdiff','DPS-Analyzer','https://github.com/Orbdiff/DPS-Analyzer')
+ @('Orbdiff','UserAssistView','https://github.com/Orbdiff/UserAssistView')
+ @('Orbdiff','JournalParser','https://github.com/Orbdiff/JournalParser')
+ @('Orbdiff','InjGen','https://github.com/Orbdiff/InjGen')
+ @('Orbdiff','USBDetector','https://github.com/Orbdiff/USBDetector')
+ @('Orbdiff','PFTrace','https://github.com/Orbdiff/PFTrace')
+ @('Orbdiff','CheckDeletedUSN','https://github.com/Orbdiff/CheckDeletedUSN')
+ @('Orbdiff','JARParser','https://github.com/Orbdiff/JARParser')
+ @('Spokwn','BAM-parser','https://github.com/spokwn/BAM-parser')
+ @('Spokwn','PathsParser','https://github.com/spokwn/PathsParser')
+ @('Spokwn','JournalTrace','https://github.com/spokwn/JournalTrace')
+ @('Spokwn','KernelLiveDumpTool','https://github.com/spokwn/KernelLiveDumpTool')
+ @('Spokwn','BamDeletedKeys','https://github.com/spokwn/BamDeletedKeys')
+ @('Spokwn','Tool','https://github.com/spokwn/Tool')
+ @('Spokwn','pcasvc-executed','https://github.com/spokwn/pcasvc-executed')
+ @('Spokwn','process-parser','https://github.com/spokwn/process-parser')
+ @('Spokwn','prefetch-parser','https://github.com/spokwn/prefetch-parser')
+ @('Spokwn','ActivitiesCache-execution','https://github.com/spokwn/ActivitiesCache-execution')
+ @('Tonynoh','MeowDoomsdayFucker','https://github.com/MeowTonynoh/MeowDoomsdayFucker')
+ @('Tonynoh','MeowModAnalyzer','https://github.com/MeowTonynoh/MeowModAnalyzer')
+ @('Tonynoh','MeowResolver','https://github.com/MeowTonynoh/MeowResolver')
+ @('Tonynoh','MeowNovowareFucker','https://github.com/MeowTonynoh/MeowNovowareFucker')
+ @('Tonynoh','MeowImportsChecker','https://github.com/MeowTonynoh/MeowImportsChecker')
+ @('Tonynoh','MeowClientFucker','https://github.com/MeowTonynoh/MeowClientFucker')
+ @('Praiselily','PSHunter','https://github.com/praiselily/PSHunter')
+ @('Praiselily','AltDetector','https://github.com/praiselily/AltDetector')
+ @('Praiselily','WeHateFakers','https://github.com/praiselily/WeHateFakers')
+ @('Praiselily','CommonDirectories','https://github.com/praiselily/lilith-ps/CommonDirectories')
+ @('Praiselily','HarddiskConverter','https://github.com/praiselily/lilith-ps/HarddiskConverter')
+ @('Praiselily','Services','https://github.com/praiselily/lilith-ps/Services')
+ @('Praiselily','Signed-Scheduled-Tasks','https://github.com/praiselily/lilith-ps/Signed-Scheduled-Tasks')
+ @('RedLotus','RedLotus-Mod-Analyzer','https://github.com/ItzIceHere/RedLotus-Mod-Analyzer')
+ @('RedLotus','RedLotus-Task-Sentinel','https://github.com/ItzIceHere/RedLotus-Task-Sentinel')
+ @('RedLotus','RedLotusAltChecker','https://github.com/ItzIceHere/RedLotusAltChecker')
+ @('Others','Jarabel','https://github.com/nay-cat/Jarabel')
+ @('Others','Luyten','https://github.com/deathmarine/Luyten')
+ @('Others','VMAware','https://github.com/kernelwernel/VMAware')
+ @('Others','Velociraptor','https://github.com/Velocidex/velociraptor')
+ @('Others','NTFS Parser','https://github.com/thewhiteninja/ntfstool')
+ @('Others','Hayabusa','https://github.com/Yamato-Security/hayabusa')
+ @('Others','DIE-engine','https://github.com/horsicq/DIE-engine')
+ @('Others','MacroDetector','https://github.com/NiccBlahh/MacroDetector')
+ @('Others','ComputerActivityView','https://www.nirsoft.net/utils/computer_activity_view.html')
+ @('Others','SystemInformer','https://www.systeminformer.com/canary')
+ @('Others','Everything','https://www.voidtools.com/downloads/')
+ @('Others','HxD','https://mh-nexus.de/en/hxd/')
+ @('Zimmerman','AmcacheParser','https://download.ericzimmermanstools.com/net9/AmcacheParser.zip')
+ @('Zimmerman','bstrings','https://download.ericzimmermanstools.com/net9/bstrings.zip')
+ @('Zimmerman','JLECmd','https://download.ericzimmermanstools.com/net9/JLECmd.zip')
+ @('Zimmerman','JumpListExplorer','https://download.ericzimmermanstools.com/net9/JumpListExplorer.zip')
+ @('Zimmerman','MFTECmd','https://download.ericzimmermanstools.com/net9/MFTECmd.zip')
+ @('Zimmerman','PECmd','https://download.ericzimmermanstools.com/net9/PECmd.zip')
+ @('Zimmerman','RecentFileCacheParser','https://download.ericzimmermanstools.com/net9/RecentFileCacheParser.zip')
+ @('Zimmerman','RegistryExplorer','https://download.ericzimmermanstools.com/net9/RegistryExplorer.zip')
+ @('Zimmerman','ShellBagsExplorer','https://download.ericzimmermanstools.com/net9/ShellBagsExplorer.zip')
+ @('Zimmerman','SrumECmd','https://download.ericzimmermanstools.com/net9/SrumECmd.zip')
+ @('Zimmerman','TimelineExplorer','https://download.ericzimmermanstools.com/net9/TimelineExplorer.zip')
+ @('NirSoft','FullEventLogView','https://www.nirsoft.net/utils/fulleventlogview.zip')
+ @('NirSoft','NetworkUsageView','https://www.nirsoft.net/utils/networkusageview.zip')
+ @('NirSoft','BrowserDownloadsView','https://www.nirsoft.net/utils/browserdownloadsview.zip')
+ @('NirSoft','AlternateStreamView','https://www.nirsoft.net/utils/alternatestreamview.zip')
+ @('NirSoft','USBDeview','https://www.nirsoft.net/utils/usbdeview.zip')
+ @('NirSoft','OpenSaveFilesView','https://www.nirsoft.net/utils/opensavefilesview.zip')
+ @('NirSoft','ExecutedProgramsList','https://www.nirsoft.net/utils/executedprogramslist.zip')
+ @('NirSoft','TaskSchedulerView','https://www.nirsoft.net/utils/taskschedulerview.zip')
+ @('NirSoft','JumpListsView','https://www.nirsoft.net/utils/jumplistsview.zip')
+ @('NirSoft','WinPrefetchView','https://www.nirsoft.net/utils/winprefetchview.zip')
+ @('NirSoft','RegScanner','https://www.nirsoft.net/utils/regscanner.zip')
+ @('NirSoft','ShellBagsView','https://www.nirsoft.net/utils/shellbagsview.zip')
+ @('Dependencies','.NET downloads','https://dotnet.microsoft.com/en-us/download/dotnet')
+ @('Dependencies','Visual C++ Redistributable','https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist')
 )
 foreach($a in $cheesyTools){
- $script:tools += [pscustomobject]@{Category='CheesyCat Utilities'; Name=$a[0]; Description=$a[1]; Url=$a[2]; Kind='External link'}
+ $script:tools += [pscustomobject]@{Category=$a[0]; Name=$a[1]; Description='Original developer download or project page'; Url=$a[2]; Kind='External link'}
 }
 
 function Scan-Local([string]$id) {
@@ -435,23 +504,9 @@ if($ScanId) {
 }
 
 [xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Staff Dashboard" Width="1240" Height="780" MinWidth="950" MinHeight="600" Background="#080D18" WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
-<Window.Resources>
-<Style TargetType="Button">
-<Setter Property="Foreground" Value="White"/>
-<Setter Property="FontWeight" Value="SemiBold"/>
-<Setter Property="SnapsToDevicePixels" Value="True"/>
-<Setter Property="Cursor" Value="Hand"/>
-<Style.Triggers>
-<Trigger Property="IsMouseOver" Value="True">
-<Setter Property="Background" Value="#174B75"/>
-<Setter Property="Foreground" Value="#FFFFFF"/>
-</Trigger>
-</Style.Triggers>
-</Style>
-</Window.Resources>
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Original Staff Workspace" Width="1240" Height="780" MinWidth="950" MinHeight="600" Background="#080D18" WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
 <Grid>
-<Grid.ColumnDefinitions><ColumnDefinition Width="255"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+<Grid.ColumnDefinitions><ColumnDefinition Width="230"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
 <Border Background="#0E1B2E" BorderBrush="#294A6B" BorderThickness="0,0,1,0">
 <DockPanel Margin="14">
 <StackPanel DockPanel.Dock="Top" Margin="6,18,6,22">
@@ -469,7 +524,7 @@ if($ScanId) {
 </DockPanel>
 </Border>
 <Grid Grid.Column="1" Margin="23,20,23,18">
-<Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="145"/></Grid.RowDefinitions>
+<Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="210"/></Grid.RowDefinitions>
 <Grid Grid.Row="0">
 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="250"/></Grid.ColumnDefinitions>
 <StackPanel><TextBlock Text="YUNEH / INVESTIGATION WORKSPACE" Foreground="#4BB8FF" FontSize="11" FontWeight="Bold"/><TextBlock x:Name="TitleText" Text="Tool Library" Foreground="White" FontSize="30" FontWeight="Bold" Margin="0,5,0,0"/><TextBlock x:Name="SubtitleText" Text="Choose a category or search the toolkit" Foreground="#94ABC7" FontSize="12" Margin="0,5,0,0"/></StackPanel>
@@ -493,14 +548,14 @@ if($ScanId) {
 <TextBlock x:Name="SelectedName" Text="Select a tool" Foreground="White" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" Margin="0,17,0,8"/>
 <TextBlock x:Name="SelectedDesc" Text="Choose a tool to see its purpose." Foreground="#A4BDD6" TextWrapping="Wrap" FontSize="12"/>
 <TextBlock x:Name="SelectedSource" Text="" Foreground="#6BBEFF" FontSize="11" TextWrapping="Wrap" Margin="0,16,0,0"/>
-<Button x:Name="OpenButton" Content="Run selected check" Background="#1974BC" Foreground="White" FontWeight="Bold" BorderThickness="0" Height="40" Margin="0,22,0,0" IsEnabled="False" Cursor="Hand"/>
+<Button x:Name="OpenButton" Content="Open official page" Background="#1974BC" Foreground="White" FontWeight="Bold" BorderThickness="0" Height="40" Margin="0,22,0,0" IsEnabled="False" Cursor="Hand"/>
 <TextBlock Text="Results are indicators, not proof. Review with the computer owner." TextWrapping="Wrap" Foreground="#849CB7" FontSize="11" Margin="0,18,0,0"/>
 </StackPanel>
 </Border>
 </Grid>
 <Border Grid.Row="3" Background="#07111F" BorderBrush="#25425F" BorderThickness="1" CornerRadius="9" Padding="12">
 <DockPanel>
-<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="LIVE CONSOLE" Foreground="#6BC4FF" FontSize="11" FontWeight="Bold"/><Button x:Name="CopyLog" Content="Copy" Background="#244563" Foreground="White" BorderThickness="0" Margin="18,0,0,0" Padding="10,3" Cursor="Hand"/><Button x:Name="ClearLog" Content="Clear" Background="#244563" Foreground="White" BorderThickness="0" Margin="8,0,0,0" Padding="10,3" Cursor="Hand"/></StackPanel>
+<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#6BC4FF" FontSize="11" FontWeight="Bold"/><Button x:Name="CopyLog" Content="Copy" Background="#244563" Foreground="White" BorderThickness="0" Margin="18,0,0,0" Padding="10,3" Cursor="Hand"/><Button x:Name="ClearLog" Content="Clear" Background="#244563" Foreground="White" BorderThickness="0" Margin="8,0,0,0" Padding="10,3" Cursor="Hand"/></StackPanel>
 <TextBox x:Name="LogBox" Background="Transparent" Foreground="#8ED3FF" BorderThickness="0" FontFamily="Consolas" FontSize="11" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
 </DockPanel>
 </Border>
@@ -567,75 +622,48 @@ $script:Render = {
    $script:selected = $tool
    $selectedName.Text = $tool.Name
    $selectedDesc.Text = $tool.Description
-   $selectedSource.Text = if($tool.Kind -eq 'External link') {'Original developer website - opens browser'} else {'Read-only results appear in the live console below'}
-   $open.IsEnabled = ($tool.Kind -eq 'Local')
+   $selectedSource.Text = if($tool.Kind -eq 'External link') {'Original developer website - opens browser'} else {'Opens its own CMD results window'}
+   $open.IsEnabled = $false
    if($tool.Kind -eq 'External link') {
     $answer = [Windows.MessageBox]::Show("Open the original developer page for $($tool.Name)? No software will be installed automatically.",'External utility','YesNo','Question')
     if($answer -eq 'Yes'){Start-Process -FilePath $tool.Url; Log-Event "Opened developer page: $($tool.Name)"}
     return
    }
+   $scriptPath = $PSCommandPath
+   if(-not $scriptPath) {
+    try {
+     $scriptPath = Join-Path $env:TEMP 'YunehSSTool_Active.ps1'
+     $source = 'https://raw.githubusercontent.com/Yuneh21/YungehSSTool/main/YunehSSTool.ps1'
+     $content = (Invoke-WebRequest -Uri $source -UseBasicParsing -ErrorAction Stop).Content
+     [System.IO.File]::WriteAllText($scriptPath,[string]$content,[System.Text.UTF8Encoding]::new($false))
+    } catch { Log-Event "Cannot prepare CMD scanner: $($_.Exception.Message)"; return }
+   }
    $answer = [Windows.MessageBox]::Show(
-    "Run $($tool.Name) on this computer?`n`nThis is a local, read-only check. Results will appear in the console below.",
-    'YunehSSTool','YesNo','Question')
-   if($answer -ne 'Yes'){ Log-Event 'Check cancelled'; return }
+    "Open a CMD window and run $($tool.Name)?`n`nOnly this selected check will run, on this computer.",
+    'Yuneh Cheat Finder','YesNo','Question')
+   if($answer -ne 'Yes'){return}
    try {
-    Log-Event "Running: $($tool.Name)"
-    $window.Dispatcher.Invoke([Action]{}, [Windows.Threading.DispatcherPriority]::Background)
-    $data = Scan-Local ([string]$tool.Url)
-    $log.AppendText("=== $($tool.Name) ===`r`n$data`r`n")
-    $log.ScrollToEnd()
-    Log-Event "Finished: $($tool.Name)"
-   } catch { Log-Event "Scan failed: $($_.Exception.Message)" }
-
+    $arguments = '/d /k powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File "' + $scriptPath + '" -ScanId "' + $tool.Url + '"'
+    Start-Process -FilePath "$env:SystemRoot\System32\cmd.exe" -ArgumentList $arguments
+    Log-Event "Opened CMD detector: $($tool.Name)"
+   } catch { Log-Event "Could not open CMD: $($_.Exception.Message)" }
   })
   [void]$items.Children.Add($btn)
  }
 }
-# Sidebar navigation: names stay white on hover and the active section is highlighted.
-$navItems = @(
- @('Dashboard','All tools'),
- @('Cheat Finder','Yuneh Cheat finder'),
- @('Server History','Servers - Last 2 Weeks'),
- @('Minecraft Scans','Minecraft'),
- @('Windows Scans','Windows'),
- @('Local Checks','Local checks'),
- @('Downloads & Utilities','CheesyCat Utilities')
-)
-$script:navButtons = @()
-function Update-Navigation {
- foreach($button in $script:navButtons) {
-  $active = ($button.Tag -eq $script:category)
-  $button.Background = (New-Object Windows.Media.BrushConverter).ConvertFromString($(if($active){'#18517E'}else{'#111F33'}))
-  $button.BorderBrush = (New-Object Windows.Media.BrushConverter).ConvertFromString($(if($active){'#4DBBFF'}else{'#253E58'}))
-  $button.Foreground = [Windows.Media.Brushes]::White
- }
-}
-foreach($entry in $navItems) {
+foreach($cat in @('Yuneh Cheat finder','Servers - Last 2 Weeks','Minecraft','Windows','Local checks','Orbdiff','Spokwn','Tonynoh','Praiselily','RedLotus','Others','Zimmerman','NirSoft','Dependencies','All tools')) {
  $btn = New-Object Windows.Controls.Button
- $btn.Content = '  ' + $entry[0]
- $btn.Tag = $entry[1]
- $btn.Background = (New-Object Windows.Media.BrushConverter).ConvertFromString('#111F33')
- $btn.Foreground = [Windows.Media.Brushes]::White
- $btn.BorderBrush = (New-Object Windows.Media.BrushConverter).ConvertFromString('#253E58')
- $btn.BorderThickness = '1'
- $btn.Height = 43
- $btn.Margin = '0,0,0,7'
- $btn.Padding = '8,0,8,0'
+ $btn.Content = "   $cat"
+ $btn.Tag = $cat
+ $btn.Background = [Windows.Media.Brushes]::Transparent
+ $btn.Foreground = [Windows.Media.Brushes]::LightSteelBlue
+ $btn.BorderThickness = '0'
+ $btn.Height = 38
  $btn.HorizontalContentAlignment = 'Left'
- $btn.FontSize = 13
- $btn.FontWeight = 'SemiBold'
  $btn.Cursor = 'Hand'
- $btn.Add_Click({
-  param($sender,$args)
-  $script:category = [string]$sender.Tag
-  Update-Navigation
-  & $script:Render
-  Log-Event "Opened section: $script:category"
- })
+ $btn.Add_Click({param($sender,$args) $script:category=[string]$sender.Tag; & $script:Render})
  [void]$nav.Children.Add($btn)
- $script:navButtons += $btn
 }
-Update-Navigation
 $search.Add_TextChanged({ & $script:Render })
 $open.Add_Click({
  if($null -eq $script:selected){return}
