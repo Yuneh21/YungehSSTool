@@ -83,6 +83,16 @@ $tools = @(
     [pscustomobject]@{Category='Dependencies'; Name='.NET downloads'; Url='https://dotnet.microsoft.com/en-us/download/dotnet'}
     [pscustomobject]@{Category='Dependencies'; Name='Visual C++ Redistributable'; Url='https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist'}
 )
+# Direct script sources identified from CheesySSTool; these require explicit review and confirmation.
+$scriptSources = @{
+  'MeowModAnalyzer' = 'https://raw.githubusercontent.com/MeowTonynoh/MeowModAnalyzer/main/MeowModAnalyzer.ps1'
+  'WeHateFakers' = 'https://raw.githubusercontent.com/praiselily/WeHateFakers/main/HotspotLogs.ps1'
+  'CommonDirectories' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/CommonDirectories.ps1'
+  'HarddiskConverter' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/HarddiskConverter.ps1'
+  'Services' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/Services.ps1'
+  'Signed-Scheduled-Tasks' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/Signed-Scheduled-Tasks.ps1'
+  'MacroDetector' = 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/main/MacroDetector.ps1'
+}
 [xml]$xaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1130" Height="735" MinWidth="900" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#090F19" FontFamily="Segoe UI">
 <Window.Resources>
@@ -133,7 +143,7 @@ function Show-Tools {
  $heading.Text = $script:category
  $q = $search.Text.Trim()
  $matches = @($tools | Where-Object {($script:category -eq 'All utilities' -or $_.Category -eq $script:category) -and ($q.Length -eq 0 -or $_.Name.IndexOf($q,[StringComparison]::OrdinalIgnoreCase) -ge 0)})
- $count.Text = "$($matches.Count) tools | Click a utility to launch a previously downloaded copy or install it"
+ $count.Text = "$($matches.Count) tools | Download and launch with permission"
  foreach($tool in $matches) {
   $b = New-Object Windows.Controls.Button
   $b.Style = $window.FindResource('DarkButton')
@@ -178,7 +188,10 @@ function Show-Tools {
     # Resolve release assets and repository-hosted binaries without assuming every repo has releases.
     $downloadUrl = $null
     $downloadName = $null
-    if($uri.AbsolutePath -match '(?i)\.(zip|exe)$') {
+    if($scriptSources.ContainsKey([string]$t.Name)) {
+      $downloadUrl = $scriptSources[[string]$t.Name]
+      $downloadName = [IO.Path]::GetFileName(([Uri]$downloadUrl).AbsolutePath)
+    } elseif($uri.AbsolutePath -match '(?i)\.(zip|exe)$') {
       $downloadUrl = $t.Url
       $downloadName = [IO.Path]::GetFileName($uri.AbsolutePath)
     } elseif($uri.Host -eq 'github.com' -and $uri.AbsolutePath -match '^/([^/]+)/([^/]+)/?$') {
@@ -186,24 +199,24 @@ function Show-Tools {
       $headers = @{'User-Agent'='YunehSSTool'; 'Accept'='application/vnd.github+json'}
       try {
         $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/releases/latest" -Headers $headers -TimeoutSec 15
-        $asset = @($release.assets | Where-Object { $_.name -match '(?i)\.(zip|exe)$' -and $_.name -notmatch '(?i)(source|src|debug|symbols)' } | Sort-Object @{Expression={if($_.name -match '(?i)\.zip$'){0}else{1}}}) | Select-Object -First 1
+        $asset = @($release.assets | Where-Object { $_.name -match '(?i)\.(zip|exe)$' -and $_.name -notmatch '(?i)(source|src|debug|symbols)' } | Sort-Object @{Expression={if($_.name -match '(?i)\.exe$'){0}else{1}}}) | Select-Object -First 1
         if($asset) { $downloadUrl = [string]$asset.browser_download_url; $downloadName = [string]$asset.name }
       } catch { Write-Activity "No GitHub release asset for $($t.Name); checking repository files." }
       if(-not $downloadUrl) {
         try {
-          $tree = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/git/trees/HEAD?recursive=1" -Headers $headers -TimeoutSec 15
+          $repoInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo" -Headers $headers -TimeoutSec 15
+          $tree = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/git/trees/$($repoInfo.default_branch)?recursive=1" -Headers $headers -TimeoutSec 15
           $file = @($tree.tree | Where-Object { $_.type -eq 'blob' -and $_.path -match '(?i)\.(zip|exe)$' -and $_.path -notmatch '(?i)(debug|symbols|test|sample)' } | Sort-Object @{Expression={if([IO.Path]::GetFileNameWithoutExtension($_.path) -eq $t.Name){0}else{1}}}) | Select-Object -First 1
           if($file) {
             $encodedPath = ($file.path -split '/' | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
-            $branch = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo" -Headers $headers -TimeoutSec 15
-            $downloadUrl = "https://raw.githubusercontent.com/$owner/$repo/$($branch.default_branch)/$encodedPath"
+            $downloadUrl = "https://raw.githubusercontent.com/$owner/$repo/$($repoInfo.default_branch)/$encodedPath"
             $downloadName = [IO.Path]::GetFileName($file.path)
           }
         } catch { Write-Activity "Could not resolve repository binaries: $($_.Exception.Message)" }
       }
     }
     if(-not $downloadUrl) {
-      Write-Activity "No downloadable EXE/ZIP found for $($t.Name)"
+      Write-Activity "No supported downloadable release found for $($t.Name)"
       $choice = [Windows.MessageBox]::Show("No downloadable executable or ZIP could be located for $($t.Name).`n`nOpen the developer page to review installation options?",'YunehSSTool','YesNo','Question')
       if($choice -eq 'Yes') { Start-Process -FilePath $t.Url }
       return
@@ -212,6 +225,7 @@ function Show-Tools {
     if($choice -ne 'Yes') { Write-Activity "Download cancelled: $($t.Name)"; return }
     [IO.Directory]::CreateDirectory($folder) | Out-Null
     $downloadPath = Join-Path $folder $downloadName
+    if(Test-Path -LiteralPath $downloadPath) { Remove-Item -LiteralPath $downloadPath -Force }
     Write-Activity "Downloading $downloadName..."
     Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -UseBasicParsing -TimeoutSec 120 -ErrorAction Stop
     if((Get-Item -LiteralPath $downloadPath).Length -lt 100) { throw 'Downloaded file is unexpectedly small.' }
@@ -225,7 +239,11 @@ function Show-Tools {
           if(-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe ZIP entry path.' }
         }
       } finally { $z.Dispose() }
-      [IO.Compression.ZipFile]::ExtractToDirectory($downloadPath,$folder)
+      # Extract to a dedicated subdirectory to avoid collisions on repeat downloads.
+      $extractFolder = Join-Path $folder 'extracted'
+      if(Test-Path -LiteralPath $extractFolder) { Remove-Item -LiteralPath $extractFolder -Recurse -Force }
+      [IO.Directory]::CreateDirectory($extractFolder) | Out-Null
+      [IO.Compression.ZipFile]::ExtractToDirectory($downloadPath,$extractFolder)
     }
     $hash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
     Write-Activity "Saved $downloadName | SHA256: $hash"
@@ -236,6 +254,15 @@ function Show-Tools {
       $candidates = @(Get-Item -LiteralPath $downloadPath)
     } elseif($downloadName -match '(?i)\.zip$') {
       $candidates = @(Get-ChildItem -LiteralPath $folder -Recurse -File -Filter '*.exe' -ErrorAction SilentlyContinue)
+    }
+    if($downloadName -match '(?i)\.ps1$') {
+      $scriptHash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
+      $runScript = [Windows.MessageBox]::Show("PowerShell script downloaded: $downloadName`nSHA256: $scriptHash`n`nThis script may access local files. Review its contents before running. Launch in a separate PowerShell window?",'YunehSSTool','YesNo','Warning')
+      if($runScript -eq 'Yes') {
+        Start-Process powershell.exe -ArgumentList @('-NoProfile','-NoExit','-File',('"' + $downloadPath + '"')) -ErrorAction Stop
+        Write-Activity "Opened script: $downloadName"
+      } else { Write-Activity "Saved script for review: $downloadName" }
+      return
     }
     if($candidates.Count -eq 1) {
       $exe = $candidates[0]
@@ -275,6 +302,6 @@ foreach($cat in @('All utilities') + @($tools.Category | Sort-Object -Unique)) {
 $search.Add_TextChanged({Show-Tools})
 $window.FindName('Clear').Add_Click({$console.Clear();Write-Activity 'Console cleared'})
 Write-Activity "YunehSSTool ready: $($tools.Count) utility entries."
-Write-Activity 'Installed tools launch with confirmation; ZIPs download to AppData for review.'
+Write-Activity 'Tools download to AppData. Running files always requires confirmation.'
 Show-Tools
 [void]$window.ShowDialog()
