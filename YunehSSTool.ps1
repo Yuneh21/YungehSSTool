@@ -83,6 +83,83 @@ $tools = @(
     [pscustomobject]@{Category='Dependencies'; Name='.NET downloads'; Url='https://dotnet.microsoft.com/en-us/download/dotnet'}
     [pscustomobject]@{Category='Dependencies'; Name='Visual C++ Redistributable'; Url='https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist'}
 )
+$toolDescriptions = @{
+  'PrefetchView' = 'Shows records of programs Windows may have run.'
+  'BAMReveal' = 'Checks Windows records of recently run programs.'
+  'StringsParser' = 'Finds readable text inside selected files.'
+  'Fileless' = 'Examines traces of activity that may not leave a normal file.'
+  'DPS-Analyzer' = 'Helps inspect Windows diagnostic service records.'
+  'UserAssistView' = 'Shows app-launch history saved by Windows.'
+  'JournalParser' = 'Reads file-system change records when available.'
+  'InjGen' = 'Specialised inspection utility; review its documentation first.'
+  'USBDetector' = 'Shows traces of USB devices connected to Windows.'
+  'PFTrace' = 'Examines Windows Prefetch activity records.'
+  'CheckDeletedUSN' = 'Checks file-system records for deleted-file activity.'
+  'JARParser' = 'Examines Java JAR files and their contents.'
+  'BAM-parser' = 'Reads Windows records of program execution.'
+  'PathsParser' = 'Helps examine file paths found in system records.'
+  'JournalTrace' = 'Checks file-system activity records.'
+  'KernelLiveDumpTool' = 'Advanced Windows memory diagnostics; may need admin access.'
+  'BamDeletedKeys' = 'Checks Windows execution records for removed entries.'
+  'Tool' = 'General diagnostic utility; read the developer instructions.'
+  'pcasvc-executed' = 'Looks for app-execution traces in Windows records.'
+  'process-parser' = 'Helps examine information about processes.'
+  'prefetch-parser' = 'Reads Windows Prefetch files for program activity.'
+  'ActivitiesCache-execution' = 'Checks activity history stored by Windows.'
+  'MeowDoomsdayFucker' = 'Specialised Minecraft client check; review the tool before use.'
+  'MeowModAnalyzer' = 'Examines Minecraft mod files for possible client modifications.'
+  'MeowResolver' = 'Minecraft-related investigation helper; check its instructions.'
+  'MeowNovowareFucker' = 'Specialised Minecraft client check; review before use.'
+  'MeowImportsChecker' = 'Checks imported components in files for clues.'
+  'MeowClientFucker' = 'Checks for signs linked to Minecraft clients; not proof alone.'
+  'PSHunter' = 'Helps inspect PowerShell-related activity.'
+  'AltDetector' = 'Helps look for signs of alternate accounts.'
+  'WeHateFakers' = 'Checks hotspot or network-related records.'
+  'CommonDirectories' = 'Opens or checks common Windows folders.'
+  'HarddiskConverter' = 'Disk information helper; check the instructions first.'
+  'Services' = 'Shows or checks Windows background services.'
+  'Signed-Scheduled-Tasks' = 'Checks scheduled tasks and their signatures.'
+  'RedLotus-Mod-Analyzer' = 'Examines Minecraft mods for suspicious modifications.'
+  'RedLotus-Task-Sentinel' = 'Helps review Windows scheduled tasks.'
+  'RedLotusAltChecker' = 'Helps investigate signs of alternate accounts.'
+  'Jarabel' = 'Helps examine Java JAR files.'
+  'Luyten' = 'Lets you inspect compiled Java code in JAR files.'
+  'VMAware' = 'Checks whether Windows appears to run in a virtual machine.'
+  'Velociraptor' = 'Advanced computer investigation and diagnostics platform.'
+  'NTFS Parser' = 'Reads information stored in the Windows file system.'
+  'Hayabusa' = 'Searches Windows event logs for notable activity.'
+  'DIE-engine' = 'Identifies file types and executable formats.'
+  'MacroDetector' = 'Looks for possible macro-related activity.'
+  'ComputerActivityView' = 'Shows a timeline of activity recorded by Windows.'
+  'SystemInformer' = 'Shows detailed information about running programs.'
+  'Everything' = 'Quickly searches for files and folders on the PC.'
+  'HxD' = 'Lets you inspect file contents as hexadecimal data.'
+  'AmcacheParser' = 'Reads Windows records of installed or run programs.'
+  'bstrings' = 'Finds readable text inside files.'
+  'JLECmd' = 'Reads Windows Jump List history.'
+  'JumpListExplorer' = 'Lets you browse Windows Jump List history.'
+  'MFTECmd' = 'Reads file-system metadata and file history.'
+  'PECmd' = 'Reads Windows Prefetch program-launch records.'
+  'RecentFileCacheParser' = 'Reads an older Windows recent-file record format.'
+  'RegistryExplorer' = 'Lets you browse Windows Registry data.'
+  'ShellBagsExplorer' = 'Shows Windows folder-browsing history.'
+  'SrumECmd' = 'Reads Windows resource and network-usage records.'
+  'TimelineExplorer' = 'Helps browse timelines exported by other tools.'
+  'FullEventLogView' = 'Shows Windows event logs in one searchable list.'
+  'NetworkUsageView' = 'Shows network usage recorded by Windows.'
+  'BrowserDownloadsView' = 'Shows download history saved by web browsers.'
+  'AlternateStreamView' = 'Lists hidden extra data streams attached to files.'
+  'USBDeview' = 'Shows USB devices Windows remembers.'
+  'OpenSaveFilesView' = 'Shows files opened or saved through Windows dialogs.'
+  'ExecutedProgramsList' = 'Shows traces of programs previously run.'
+  'TaskSchedulerView' = 'Lists Windows scheduled tasks.'
+  'JumpListsView' = 'Shows recent files recorded in Jump Lists.'
+  'WinPrefetchView' = 'Shows program launch information from Prefetch.'
+  'RegScanner' = 'Searches the Windows Registry for matching entries.'
+  'ShellBagsView' = 'Shows folder access traces saved by Windows.'
+  '.NET downloads' = 'Opens Microsoft downloads for required .NET components.'
+  'Visual C++ Redistributable' = 'Opens Microsoft downloads for required app libraries.'
+}
 # Direct script sources identified from CheesySSTool; these require explicit review and confirmation.
 $scriptSources = @{
   'MeowModAnalyzer' = 'https://raw.githubusercontent.com/MeowTonynoh/MeowModAnalyzer/main/MeowModAnalyzer.ps1'
@@ -94,17 +171,17 @@ $scriptSources = @{
   'MacroDetector' = 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/main/MacroDetector.ps1'
 }
 [xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1130" Height="735" MinWidth="900" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#090F19" FontFamily="Segoe UI">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1130" Height="735" MinWidth="900" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#080D18" FontFamily="Segoe UI">
 <Window.Resources>
 <Style x:Key="DarkButton" TargetType="Button">
- <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#142C45"/><Setter Property="BorderBrush" Value="#305C82"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
- <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#225A88"/><Setter Property="Foreground" Value="White"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+ <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#122A42"/><Setter Property="BorderBrush" Value="#315E83"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#155C91"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bg" Property="Background" Value="#0C385A"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
 </Style>
 </Window.Resources>
 <Grid>
  <Grid.ColumnDefinitions><ColumnDefinition Width="225"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
- <Border Background="#0D1D2D" BorderBrush="#284B6D" BorderThickness="0,0,1,0"><DockPanel Margin="12">
- <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><TextBlock Text="Y." FontSize="43" FontWeight="Bold" Foreground="#70CAFF"/><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#7FBCE8" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
+ <Border BorderBrush="#24577C" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#0B1729" Offset="0"/><GradientStop Color="#102B46" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
+ <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="66" Height="66" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#4DAFE8" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#174D7C" Offset="0"/><GradientStop Color="#0B213D" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="38" FontWeight="Bold" Foreground="#87D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#7FBCE8" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
  <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#91C6E9" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
  </DockPanel></Border>
@@ -112,12 +189,12 @@ $scriptSources = @{
  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="150"/></Grid.RowDefinitions>
  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
  <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="27" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
- <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#14283C" Foreground="White" BorderBrush="#38678A" Padding="9,7" ToolTip="Type a tool name to search"/>
+ <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#122840" Foreground="White" BorderBrush="#4B87AF" Padding="9,7" ToolTip="Type a tool name to search"/>
  </Grid>
- <Border Grid.Row="1" Background="#101D2B" BorderBrush="#2A4A65" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12">
- <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="235" Orientation="Horizontal"/></ScrollViewer>
+ <Border Grid.Row="1" Background="#0D1C2E" BorderBrush="#245477" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="245" Orientation="Horizontal"/></ScrollViewer>
  </Border>
- <Border Grid.Row="2" Background="#070E18" BorderBrush="#2A4A65" BorderThickness="1" CornerRadius="8" Padding="12">
+ <Border Grid.Row="2" Background="#080F1B" BorderBrush="#245477" BorderThickness="1" CornerRadius="14" Padding="12">
  <DockPanel><StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#72C8FF" FontSize="11" FontWeight="Bold"/><Button x:Name="Clear" Content="Clear" Style="{StaticResource DarkButton}" Margin="18,0,0,6" Padding="8,2"/></StackPanel>
  <TextBox x:Name="Console" Background="Transparent" Foreground="#B4E4FF" BorderThickness="0" FontFamily="Consolas" FontSize="11" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></DockPanel>
  </Border>
@@ -138,22 +215,80 @@ function Write-Activity([string]$message) {
  $console.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $message`r`n")
  $console.ScrollToEnd()
 }
+function Test-ScriptLaunchAllowed([string]$path) {
+ # Respect the target PC's execution policy; do not silently bypass it.
+ $policy = Get-ExecutionPolicy
+ $signature = Get-AuthenticodeSignature -LiteralPath $path
+ if($policy -in @('Restricted','AllSigned')) {
+   if($policy -eq 'Restricted' -or $signature.Status -ne 'Valid') {
+     $reason = if($policy -eq 'Restricted') { 'PowerShell scripts are disabled on this computer.' } else { 'This script does not have a valid trusted signature.' }
+     Write-Activity "Blocked by Windows policy: $([IO.Path]::GetFileName($path)) ($policy)"
+     [void][Windows.MessageBox]::Show("$reason`n`nUtility: $([IO.Path]::GetFileName($path))`nPolicy: $policy`n`nYunehSSTool will not change Windows security settings. Ask the utility developer for a signed or standalone version.", 'YunehSSTool - Script Blocked', 'OK', 'Warning')
+     return $false
+   }
+ }
+ if($policy -eq 'RemoteSigned') {
+   try {
+     $zone = Get-Item -LiteralPath $path -Stream Zone.Identifier -ErrorAction SilentlyContinue
+     if($zone -and $signature.Status -ne 'Valid') {
+       Write-Activity "Script needs trusted signature: $([IO.Path]::GetFileName($path))"
+       [void][Windows.MessageBox]::Show('Windows requires this downloaded script to be signed. Ask its developer for a signed or standalone release.', 'YunehSSTool - Script Blocked', 'OK', 'Warning')
+       return $false
+     }
+   } catch {}
+ }
+ return $true
+}
 function Show-Tools {
  $panel.Children.Clear()
  $heading.Text = $script:category
  $q = $search.Text.Trim()
  $matches = @($tools | Where-Object {($script:category -eq 'All utilities' -or $_.Category -eq $script:category) -and ($q.Length -eq 0 -or $_.Name.IndexOf($q,[StringComparison]::OrdinalIgnoreCase) -ge 0)})
- $count.Text = "$($matches.Count) tools | Download and launch with permission"
+ $count.Text = "$($matches.Count) tools | Availability depends on publisher and Windows settings"
  foreach($tool in $matches) {
   $b = New-Object Windows.Controls.Button
   $b.Style = $window.FindResource('DarkButton')
-  $b.Content = $tool.Name
+  $info = $toolDescriptions[$tool.Name]
+  if (-not $info) { $info = 'Open this utility to learn what it checks.' }
+  $labelStack = New-Object Windows.Controls.StackPanel
+  $nameLabel = New-Object Windows.Controls.TextBlock
+  $nameLabel.Text = $tool.Name
+  $nameLabel.FontWeight = 'SemiBold'
+  $nameLabel.Foreground = [Windows.Media.Brushes]::White
+  $nameLabel.TextWrapping = 'Wrap'
+  [void]$labelStack.Children.Add($nameLabel)
+  $detailLabel = New-Object Windows.Controls.TextBlock
+  $detailLabel.Text = $info
+  $detailLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#C7E4F5')
+  $detailLabel.FontSize = 11
+  $detailLabel.TextWrapping = 'Wrap'
+  $detailLabel.Margin = [Windows.Thickness]::new(0,5,0,0)
+  [void]$labelStack.Children.Add($detailLabel)
+  $statusLabel = New-Object Windows.Controls.TextBlock
+  $statusLabel.FontSize = 10
+  $statusLabel.Margin = [Windows.Thickness]::new(0,6,0,0)
+  $isDirect = $scriptSources.ContainsKey([string]$tool.Name) -or $tool.Url -match '(?i)\.(zip|exe)$'
+  if($scriptSources.ContainsKey([string]$tool.Name)) {
+    $statusLabel.Text = 'POWERSHELL SCRIPT | Windows may block this'
+    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#FFD68A')
+  } elseif($isDirect) {
+    $statusLabel.Text = 'DIRECT DOWNLOAD | Confirm before opening'
+    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#86E6B3')
+  } elseif($tool.Url -match '^https://github.com/[^/]+/[^/]+/?$') {
+    $statusLabel.Text = 'GITHUB PROJECT | Release checked when clicked'
+    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#A4D8FF')
+  } else {
+    $statusLabel.Text = 'MANUAL INSTALL | Developer download page'
+    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#FFD68A')
+  }
+  [void]$labelStack.Children.Add($statusLabel)
+  $b.Content = $labelStack
   $b.HorizontalContentAlignment = 'Left'
-  $b.Width = 222
-  $b.MinHeight = 48
+  $b.Width = 232
+  $b.MinHeight = 108
   $b.Margin = '0,0,10,10'
   $b.Tag = $tool
-  $b.ToolTip = "$($tool.Category) | $($tool.Url)"
+  $b.ToolTip = "$info`nSource: $($tool.Url)"
   $b.Add_Click({ param($sender,$e)
    $t = $sender.Tag
    try {
@@ -178,6 +313,7 @@ function Show-Tools {
       $answer = [Windows.MessageBox]::Show("Launch $($selected.Name)?`n`n$($selected.FullName)`n`nOnly run utilities you trust and have permission to use.",'YunehSSTool','YesNo','Question')
       if($answer -ne 'Yes') { Write-Activity "Launch cancelled: $($t.Name)"; return }
       if($selected.Extension -eq '.ps1') {
+        if(-not (Test-ScriptLaunchAllowed $selected.FullName)) { return }
         Start-Process powershell.exe -ArgumentList @('-NoProfile','-STA','-NoExit','-File',('"' + $selected.FullName + '"'))
       } elseif($selected.Extension -in @('.cmd','.bat')) {
         Start-Process cmd.exe -ArgumentList @('/k',('"' + $selected.FullName + '"'))
@@ -217,7 +353,7 @@ function Show-Tools {
     }
     if(-not $downloadUrl) {
       Write-Activity "No supported downloadable release found for $($t.Name)"
-      $choice = [Windows.MessageBox]::Show("No downloadable executable or ZIP could be located for $($t.Name).`n`nOpen the developer page to review installation options?",'YunehSSTool','YesNo','Question')
+      $choice = [Windows.MessageBox]::Show("No ready-to-run download was found for $($t.Name). The project might contain source code only, require installation, or have no release.`n`nOpen its official page for instructions?",'YunehSSTool','YesNo','Question')
       if($choice -eq 'Yes') { Start-Process -FilePath $t.Url }
       return
     }
@@ -259,6 +395,7 @@ function Show-Tools {
       $scriptHash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
       $runScript = [Windows.MessageBox]::Show("PowerShell script downloaded: $downloadName`nSHA256: $scriptHash`n`nThis script may access local files. Review its contents before running. Launch in a separate PowerShell window?",'YunehSSTool','YesNo','Warning')
       if($runScript -eq 'Yes') {
+        if(-not (Test-ScriptLaunchAllowed $downloadPath)) { return }
         Start-Process powershell.exe -ArgumentList @('-NoProfile','-NoExit','-File',('"' + $downloadPath + '"')) -ErrorAction Stop
         Write-Activity "Opened script: $downloadName"
       } else { Write-Activity "Saved script for review: $downloadName" }
@@ -302,6 +439,60 @@ foreach($cat in @('All utilities') + @($tools.Category | Sort-Object -Unique)) {
 $search.Add_TextChanged({Show-Tools})
 $window.FindName('Clear').Add_Click({$console.Clear();Write-Activity 'Console cleared'})
 Write-Activity "YunehSSTool ready: $($tools.Count) utility entries."
-Write-Activity 'Tools download to AppData. Running files always requires confirmation.'
+Write-Activity 'Green: direct download | Blue: check GitHub release | Yellow: manual setup or PowerShell policy.'
+Write-Activity 'No automatic security bypass. Downloads and launches require approval.'
+# Startup-only consent dialog. No scans or downloads begin before approval.
+$consentXaml = @'
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        Title="YunehSSTool | Welcome" Width="560" Height="490"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#091321" Foreground="White" FontFamily="Segoe UI"
+        ShowInTaskbar="True">
+  <Border Padding="28" BorderBrush="#28658B" BorderThickness="2" CornerRadius="12">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <StackPanel Grid.Row="0" Margin="0,0,0,18">
+        <TextBlock Text="YUNEH SS TOOL" FontSize="27" FontWeight="Bold" Foreground="#83D6FF"/>
+        <TextBlock Text="Screenshare consent" FontSize="16" Margin="0,7,0,0"/>
+      </StackPanel>
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#DFEAF5" LineHeight="21">
+          This tool is intended for a voluntary Minecraft screenshare check.&#10;&#10;
+          By continuing, you agree that the person conducting the check may ask you to run diagnostic utilities that inspect Minecraft logs, local files, and information about running programs. Some utilities are made by third parties.&#10;&#10;
+          No scan or download starts just by accepting this screen. Individual downloads and launches may ask for separate permission.&#10;&#10;
+          You can decline now or stop the check at any time. Do not turn off antivirus or Windows security settings.&#10;&#10;
+          This agreement does not waive your legal rights or remove anyone's responsibility for harm.
+        </TextBlock>
+      </ScrollViewer>
+      <CheckBox Grid.Row="2" Name="AgreeBox" Margin="0,14,0,16"
+                Foreground="White" Content="I understand and voluntarily agree to continue."/>
+      <Grid Grid.Row="3">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Button Grid.Column="0" Name="DeclineButton" Content="Decline" Height="39"
+                Background="#22364F" Foreground="White" BorderBrush="#52708D"/>
+        <Button Grid.Column="2" Name="AcceptButton" Content="Accept &amp; Continue" Height="39"
+                Background="#126CA5" Foreground="White" BorderBrush="#4CB6F4" FontWeight="SemiBold" IsEnabled="False"/>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>
+'@
+$consentReader = New-Object System.Xml.XmlNodeReader ([xml]$consentXaml)
+$consentWindow = [Windows.Markup.XamlReader]::Load($consentReader)
+$agreeBox = $consentWindow.FindName('AgreeBox')
+$acceptButton = $consentWindow.FindName('AcceptButton')
+$declineButton = $consentWindow.FindName('DeclineButton')
+$agreeBox.Add_Checked({ $acceptButton.IsEnabled = $true })
+$agreeBox.Add_Unchecked({ $acceptButton.IsEnabled = $false })
+$acceptButton.Add_Click({ $consentWindow.DialogResult = $true; $consentWindow.Close() })
+$declineButton.Add_Click({ $consentWindow.DialogResult = $false; $consentWindow.Close() })
+$consentAccepted = $consentWindow.ShowDialog()
+if($consentAccepted -ne $true) { return }
+
 Show-Tools
 [void]$window.ShowDialog()
