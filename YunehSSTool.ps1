@@ -171,31 +171,31 @@ $scriptSources = @{
   'MacroDetector' = 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/main/MacroDetector.ps1'
 }
 [xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1130" Height="735" MinWidth="900" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#080D18" FontFamily="Segoe UI">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1130" Height="735" MinWidth="900" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#070B16" FontFamily="Segoe UI">
 <Window.Resources>
 <Style x:Key="DarkButton" TargetType="Button">
- <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#122A42"/><Setter Property="BorderBrush" Value="#315E83"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
- <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#155C91"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bg" Property="Background" Value="#0C385A"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+ <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#142E4D"/><Setter Property="BorderBrush" Value="#3B79A6"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#1976B7"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bg" Property="Background" Value="#0D456F"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
 </Style>
 </Window.Resources>
 <Grid>
  <Grid.ColumnDefinitions><ColumnDefinition Width="225"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
- <Border BorderBrush="#24577C" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#0B1729" Offset="0"/><GradientStop Color="#102B46" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
- <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="66" Height="66" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#4DAFE8" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#174D7C" Offset="0"/><GradientStop Color="#0B213D" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="38" FontWeight="Bold" Foreground="#87D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#7FBCE8" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
- <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#91C6E9" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
+ <Border BorderBrush="#2B6594" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#0A1226" Offset="0"/><GradientStop Color="#102A4A" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
+ <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="66" Height="66" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#63C9FF" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#18588B" Offset="0"/><GradientStop Color="#0C2544" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="38" FontWeight="Bold" Foreground="#A3E7FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#89CFFF" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
+ <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#A3D8FF" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
  </DockPanel></Border>
  <Grid Grid.Column="1" Margin="20,17,20,16">
  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="150"/></Grid.RowDefinitions>
  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
  <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="27" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
- <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#122840" Foreground="White" BorderBrush="#4B87AF" Padding="9,7" ToolTip="Type a tool name to search"/>
+ <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#132B49" Foreground="White" BorderBrush="#55A7DD" Padding="9,7" ToolTip="Type a tool name to search"/>
  </Grid>
- <Border Grid.Row="1" Background="#0D1C2E" BorderBrush="#245477" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
+ <Border Grid.Row="1" Background="#0D1A30" BorderBrush="#28628D" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
  <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="245" Orientation="Horizontal"/></ScrollViewer>
  </Border>
- <Border Grid.Row="2" Background="#080F1B" BorderBrush="#245477" BorderThickness="1" CornerRadius="14" Padding="12">
- <DockPanel><StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#72C8FF" FontSize="11" FontWeight="Bold"/><Button x:Name="Clear" Content="Clear" Style="{StaticResource DarkButton}" Margin="18,0,0,6" Padding="8,2"/></StackPanel>
+ <Border Grid.Row="2" Background="#091326" BorderBrush="#28628D" BorderThickness="1" CornerRadius="14" Padding="12">
+ <DockPanel><StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#80D9FF" FontSize="11" FontWeight="Bold"/><Button x:Name="Clear" Content="Clear" Style="{StaticResource DarkButton}" Margin="18,0,0,6" Padding="8,2"/></StackPanel>
  <TextBox x:Name="Console" Background="Transparent" Foreground="#B4E4FF" BorderThickness="0" FontFamily="Consolas" FontSize="11" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></DockPanel>
  </Border>
  </Grid>
@@ -244,7 +244,7 @@ function Show-Tools {
  $heading.Text = $script:category
  $q = $search.Text.Trim()
  $matches = @($tools | Where-Object {($script:category -eq 'All utilities' -or $_.Category -eq $script:category) -and ($q.Length -eq 0 -or $_.Name.IndexOf($q,[StringComparison]::OrdinalIgnoreCase) -ge 0)})
- $count.Text = "$($matches.Count) tools | Availability depends on publisher and Windows settings"
+ $count.Text = "$($matches.Count) utilities available"
  foreach($tool in $matches) {
   $b = New-Object Windows.Controls.Button
   $b.Style = $window.FindResource('DarkButton')
@@ -259,29 +259,11 @@ function Show-Tools {
   [void]$labelStack.Children.Add($nameLabel)
   $detailLabel = New-Object Windows.Controls.TextBlock
   $detailLabel.Text = $info
-  $detailLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#C7E4F5')
+  $detailLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#CDEBFF')
   $detailLabel.FontSize = 11
   $detailLabel.TextWrapping = 'Wrap'
   $detailLabel.Margin = [Windows.Thickness]::new(0,5,0,0)
   [void]$labelStack.Children.Add($detailLabel)
-  $statusLabel = New-Object Windows.Controls.TextBlock
-  $statusLabel.FontSize = 10
-  $statusLabel.Margin = [Windows.Thickness]::new(0,6,0,0)
-  $isDirect = $scriptSources.ContainsKey([string]$tool.Name) -or $tool.Url -match '(?i)\.(zip|exe)$'
-  if($scriptSources.ContainsKey([string]$tool.Name)) {
-    $statusLabel.Text = 'POWERSHELL SCRIPT | Windows may block this'
-    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#FFD68A')
-  } elseif($isDirect) {
-    $statusLabel.Text = 'DIRECT DOWNLOAD | Confirm before opening'
-    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#86E6B3')
-  } elseif($tool.Url -match '^https://github.com/[^/]+/[^/]+/?$') {
-    $statusLabel.Text = 'GITHUB PROJECT | Release checked when clicked'
-    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#A4D8FF')
-  } else {
-    $statusLabel.Text = 'MANUAL INSTALL | Developer download page'
-    $statusLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#FFD68A')
-  }
-  [void]$labelStack.Children.Add($statusLabel)
   $b.Content = $labelStack
   $b.HorizontalContentAlignment = 'Left'
   $b.Width = 232
@@ -439,16 +421,16 @@ foreach($cat in @('All utilities') + @($tools.Category | Sort-Object -Unique)) {
 $search.Add_TextChanged({Show-Tools})
 $window.FindName('Clear').Add_Click({$console.Clear();Write-Activity 'Console cleared'})
 Write-Activity "YunehSSTool ready: $($tools.Count) utility entries."
-Write-Activity 'Green: direct download | Blue: check GitHub release | Yellow: manual setup or PowerShell policy.'
+Write-Activity 'Choose a utility to view its available download and launch options.'
 Write-Activity 'No automatic security bypass. Downloads and launches require approval.'
 # Startup-only consent dialog. No scans or downloads begin before approval.
 $consentXaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         Title="YunehSSTool | Welcome" Width="560" Height="490"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#091321" Foreground="White" FontFamily="Segoe UI"
+        Background="#090F21" Foreground="White" FontFamily="Segoe UI"
         ShowInTaskbar="True">
-  <Border Padding="28" BorderBrush="#28658B" BorderThickness="2" CornerRadius="12">
+  <Border Padding="28" BorderBrush="#3388C0" BorderThickness="2" CornerRadius="12">
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
@@ -457,7 +439,7 @@ $consentXaml = @'
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       <StackPanel Grid.Row="0" Margin="0,0,0,18">
-        <TextBlock Text="YUNEH SS TOOL" FontSize="27" FontWeight="Bold" Foreground="#83D6FF"/>
+        <TextBlock Text="YUNEH SS TOOL" FontSize="27" FontWeight="Bold" Foreground="#A3E7FF"/>
         <TextBlock Text="Screenshare consent" FontSize="16" Margin="0,7,0,0"/>
       </StackPanel>
       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -476,7 +458,7 @@ $consentXaml = @'
         <Button Grid.Column="0" Name="DeclineButton" Content="Decline" Height="39"
                 Background="#22364F" Foreground="White" BorderBrush="#52708D"/>
         <Button Grid.Column="2" Name="AcceptButton" Content="Accept &amp; Continue" Height="39"
-                Background="#126CA5" Foreground="White" BorderBrush="#4CB6F4" FontWeight="SemiBold" IsEnabled="False"/>
+                Background="#1685C7" Foreground="White" BorderBrush="#6DD3FF" FontWeight="SemiBold" IsEnabled="False"/>
       </Grid>
     </Grid>
   </Border>
