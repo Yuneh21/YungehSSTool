@@ -58,7 +58,6 @@ $extra = @(
  @('Minecraft','Mod metadata review','Reads mod IDs from fabric.mod.json in local JARs','metadata'),
  @('Minecraft','Mod SHA256 fingerprints','Computes local mod hashes for comparison','hashes'),
  @('Minecraft','Game directory inventory','Lists Minecraft folders and sizes','inventory'),
- @('Minecraft','Client filename indicators','Highlights known client names in local mods; verify manually','indicators'),
  @('Windows','Prefetch file inventory','Lists Windows Prefetch filenames when accessible','prefetch'),
  @('Windows','Windows recent shortcuts','Lists recent shortcut filenames','recent'),
  @('Windows','Java runtime inventory','Lists installed Java commands and versions','javaruntime'),
@@ -67,7 +66,6 @@ $extra = @(
  @('Windows','USB device names','Lists connected USB device names','usb'),
  @('Windows','Macro script filenames','Finds AHK and AutoIt scripts in selected folders','scripts'),
  @('Yuneh Cheat finder','Mod Metadata Analyzer','Shows Fabric mod identifiers where available','metadata'),
- @('Yuneh Cheat finder','Known Client Name Review','Filename-based indicators, not proof','indicators'),
  @('Yuneh Cheat finder','Macro Script Finder','Checks script filenames, not their content','scripts'),
  @('Yuneh Cheat finder','Launcher Folder Finder','Lists common launcher folders','launchers'),
  @('Yuneh Cheat finder','Mod Hash Viewer','Lists mod SHA256 hashes','hashes'),
@@ -495,7 +493,7 @@ if($ScanId) {
 <TextBlock x:Name="SelectedName" Text="Select a tool" Foreground="White" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" Margin="0,17,0,8"/>
 <TextBlock x:Name="SelectedDesc" Text="Choose a tool to see its purpose." Foreground="#A4BDD6" TextWrapping="Wrap" FontSize="12"/>
 <TextBlock x:Name="SelectedSource" Text="" Foreground="#6BBEFF" FontSize="11" TextWrapping="Wrap" Margin="0,16,0,0"/>
-<Button x:Name="OpenButton" Content="Open official page" Background="#1974BC" Foreground="White" FontWeight="Bold" BorderThickness="0" Height="40" Margin="0,22,0,0" IsEnabled="False" Cursor="Hand"/>
+<Button x:Name="OpenButton" Content="Run selected check" Background="#1974BC" Foreground="White" FontWeight="Bold" BorderThickness="0" Height="40" Margin="0,22,0,0" IsEnabled="False" Cursor="Hand"/>
 <TextBlock Text="Results are indicators, not proof. Review with the computer owner." TextWrapping="Wrap" Foreground="#849CB7" FontSize="11" Margin="0,18,0,0"/>
 </StackPanel>
 </Border>
@@ -569,24 +567,26 @@ $script:Render = {
    $script:selected = $tool
    $selectedName.Text = $tool.Name
    $selectedDesc.Text = $tool.Description
-   $selectedSource.Text = if($tool.Kind -eq 'External link') {'Original developer website - opens browser'} else {'Opens its own CMD results window'}
-   $open.IsEnabled = $false
+   $selectedSource.Text = if($tool.Kind -eq 'External link') {'Original developer website - opens browser'} else {'Read-only results appear in the live console below'}
+   $open.IsEnabled = ($tool.Kind -eq 'Local')
    if($tool.Kind -eq 'External link') {
     $answer = [Windows.MessageBox]::Show("Open the original developer page for $($tool.Name)? No software will be installed automatically.",'External utility','YesNo','Question')
     if($answer -eq 'Yes'){Start-Process -FilePath $tool.Url; Log-Event "Opened developer page: $($tool.Name)"}
     return
    }
-   $scriptPath = $PSCommandPath
-   if(-not $scriptPath) { Log-Event 'Cannot locate script file.'; return }
    $answer = [Windows.MessageBox]::Show(
-    "Open a CMD window and run $($tool.Name)?`n`nOnly this selected check will run, on this computer.",
-    'Yuneh Cheat Finder','YesNo','Question')
-   if($answer -ne 'Yes'){return}
+    "Run $($tool.Name) on this computer?`n`nThis is a local, read-only check. Results will appear in the console below.",
+    'YunehSSTool','YesNo','Question')
+   if($answer -ne 'Yes'){ Log-Event 'Check cancelled'; return }
    try {
-    $arguments = '/d /k powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File "' + $scriptPath + '" -ScanId "' + $tool.Url + '"'
-    Start-Process -FilePath "$env:SystemRoot\System32\cmd.exe" -ArgumentList $arguments
-    Log-Event "Opened CMD detector: $($tool.Name)"
-   } catch { Log-Event "Could not open CMD: $($_.Exception.Message)" }
+    Log-Event "Running: $($tool.Name)"
+    $window.Dispatcher.Invoke([Action]{}, [Windows.Threading.DispatcherPriority]::Background)
+    $data = Scan-Local ([string]$tool.Url)
+    $log.AppendText("=== $($tool.Name) ===`r`n$data`r`n")
+    $log.ScrollToEnd()
+    Log-Event "Finished: $($tool.Name)"
+   } catch { Log-Event "Scan failed: $($_.Exception.Message)" }
+
   })
   [void]$items.Children.Add($btn)
  }
