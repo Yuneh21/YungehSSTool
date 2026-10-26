@@ -171,7 +171,7 @@ $scriptSources = @{
   'MacroDetector' = 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/main/MacroDetector.ps1'
 }
 [xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1520" Height="960" MinWidth="1020" MinHeight="660" WindowStartupLocation="CenterScreen" Background="#030B18" FontFamily="Segoe UI">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1120" Height="720" MinWidth="850" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#030B18" FontFamily="Segoe UI">
 <Window.Resources>
 <Style x:Key="DarkButton" TargetType="Button">
  <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#08274B"/><Setter Property="BorderBrush" Value="#00BFFF"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
@@ -179,20 +179,20 @@ $scriptSources = @{
 </Style>
 </Window.Resources>
 <Grid>
- <Grid.ColumnDefinitions><ColumnDefinition Width="305"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+ <Grid.ColumnDefinitions><ColumnDefinition Width="215"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
  <Border BorderBrush="#2B6594" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#020B18" Offset="0"/><GradientStop Color="#082E56" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
- <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="112" Height="112" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#63C9FF" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#18588B" Offset="0"/><GradientStop Color="#0C2544" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="69" FontWeight="Bold" Foreground="#31D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="22" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#89CFFF" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
+ <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="70" Height="70" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#63C9FF" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#18588B" Offset="0"/><GradientStop Color="#0C2544" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="42" FontWeight="Bold" Foreground="#31D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="17" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#89CFFF" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
  <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#A3D8FF" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
  </DockPanel></Border>
- <Grid Grid.Column="1" Margin="24,27,24,20">
- <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="165"/></Grid.RowDefinitions>
- <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="365"/></Grid.ColumnDefinitions>
- <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="35" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
+ <Grid Grid.Column="1" Margin="15,16,15,14">
+ <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="115"/></Grid.RowDefinitions>
+ <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="245"/></Grid.ColumnDefinitions>
+ <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
  <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#091E36" Foreground="White" BorderBrush="#00B9FF" Padding="9,7" ToolTip="Type a tool name to search"/>
  </Grid>
  <Border Grid.Row="1" Background="#061427" BorderBrush="#007FC9" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
- <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="380" Orientation="Horizontal"/></ScrollViewer>
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="255" Orientation="Horizontal"/></ScrollViewer>
  </Border>
  <Border Grid.Row="2" Background="#051122" BorderBrush="#007FC9" BorderThickness="1" CornerRadius="14" Padding="12">
  <DockPanel><StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#80D9FF" FontSize="11" FontWeight="Bold"/><Button x:Name="Clear" Content="Clear" Style="{StaticResource DarkButton}" Margin="18,0,0,6" Padding="8,2"/></StackPanel>
@@ -254,29 +254,29 @@ function Show-Tools {
   $nameLabel = New-Object Windows.Controls.TextBlock
   $nameLabel.Text = $tool.Name
   $nameLabel.FontWeight = 'Bold'
-  $nameLabel.FontSize = 16
+  $nameLabel.FontSize = 13
   $nameLabel.Foreground = [Windows.Media.Brushes]::White
   $nameLabel.TextWrapping = 'Wrap'
   [void]$labelStack.Children.Add($nameLabel)
   $detailLabel = New-Object Windows.Controls.TextBlock
   $detailLabel.Text = $info
   $detailLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#CDEBFF')
-  $detailLabel.FontSize = 13
+  $detailLabel.FontSize = 11
   $detailLabel.TextWrapping = 'Wrap'
   $detailLabel.Margin = [Windows.Thickness]::new(0,5,0,0)
   [void]$labelStack.Children.Add($detailLabel)
   $launchLabel = New-Object Windows.Controls.TextBlock
   $launchLabel.Text = 'Launch   >'
-  $launchLabel.FontSize = 13
+  $launchLabel.FontSize = 11
   $launchLabel.FontWeight = 'SemiBold'
   $launchLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#47DFFF')
-  $launchLabel.Margin = [Windows.Thickness]::new(0,18,0,0)
+  $launchLabel.Margin = [Windows.Thickness]::new(0,9,0,0)
   [void]$labelStack.Children.Add($launchLabel)
   $b.Content = $labelStack
   $b.HorizontalContentAlignment = 'Left'
-  $b.Width = 362
-  $b.MinHeight = 165
-  $b.Margin = '0,0,10,10'
+  $b.Width = 242
+  $b.MinHeight = 120
+  $b.Margin = '0,0,8,8'
   $b.Tag = $tool
   $b.ToolTip = "$info`nSource: $($tool.Url)"
   $b.Add_Click({ param($sender,$e)
@@ -448,7 +448,7 @@ $consentXaml = @'
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       <StackPanel Grid.Row="0" Margin="0,0,0,18">
-        <TextBlock Text="YUNEH SS TOOL" FontSize="35" FontWeight="Bold" Foreground="#A3E7FF"/>
+        <TextBlock Text="YUNEH SS TOOL" FontSize="26" FontWeight="Bold" Foreground="#A3E7FF"/>
         <TextBlock Text="Screenshare consent" FontSize="16" Margin="0,7,0,0"/>
       </StackPanel>
       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
