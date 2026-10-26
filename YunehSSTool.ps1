@@ -171,30 +171,30 @@ $scriptSources = @{
   'MacroDetector' = 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/main/MacroDetector.ps1'
 }
 [xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1130" Height="735" MinWidth="900" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#070B16" FontFamily="Segoe UI">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1520" Height="960" MinWidth="1020" MinHeight="660" WindowStartupLocation="CenterScreen" Background="#030B18" FontFamily="Segoe UI">
 <Window.Resources>
 <Style x:Key="DarkButton" TargetType="Button">
- <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#142E4D"/><Setter Property="BorderBrush" Value="#3B79A6"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
- <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#1976B7"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bg" Property="Background" Value="#0D456F"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+ <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#08274B"/><Setter Property="BorderBrush" Value="#00BFFF"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="13" SnapsToDevicePixels="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#056DB5"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bg" Property="Background" Value="#05436C"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
 </Style>
 </Window.Resources>
 <Grid>
- <Grid.ColumnDefinitions><ColumnDefinition Width="225"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
- <Border BorderBrush="#2B6594" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#0A1226" Offset="0"/><GradientStop Color="#102A4A" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
- <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="66" Height="66" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#63C9FF" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#18588B" Offset="0"/><GradientStop Color="#0C2544" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="38" FontWeight="Bold" Foreground="#A3E7FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="18" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#89CFFF" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
+ <Grid.ColumnDefinitions><ColumnDefinition Width="305"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+ <Border BorderBrush="#2B6594" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#020B18" Offset="0"/><GradientStop Color="#082E56" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
+ <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="112" Height="112" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#63C9FF" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#18588B" Offset="0"/><GradientStop Color="#0C2544" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="69" FontWeight="Bold" Foreground="#31D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="22" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#89CFFF" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
  <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#A3D8FF" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
  </DockPanel></Border>
- <Grid Grid.Column="1" Margin="20,17,20,16">
- <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="150"/></Grid.RowDefinitions>
- <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
- <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="27" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
- <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#132B49" Foreground="White" BorderBrush="#55A7DD" Padding="9,7" ToolTip="Type a tool name to search"/>
+ <Grid Grid.Column="1" Margin="24,27,24,20">
+ <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="165"/></Grid.RowDefinitions>
+ <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="365"/></Grid.ColumnDefinitions>
+ <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="35" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
+ <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#091E36" Foreground="White" BorderBrush="#00B9FF" Padding="9,7" ToolTip="Type a tool name to search"/>
  </Grid>
- <Border Grid.Row="1" Background="#0D1A30" BorderBrush="#28628D" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
- <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="245" Orientation="Horizontal"/></ScrollViewer>
+ <Border Grid.Row="1" Background="#061427" BorderBrush="#007FC9" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="380" Orientation="Horizontal"/></ScrollViewer>
  </Border>
- <Border Grid.Row="2" Background="#091326" BorderBrush="#28628D" BorderThickness="1" CornerRadius="14" Padding="12">
+ <Border Grid.Row="2" Background="#051122" BorderBrush="#007FC9" BorderThickness="1" CornerRadius="14" Padding="12">
  <DockPanel><StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#80D9FF" FontSize="11" FontWeight="Bold"/><Button x:Name="Clear" Content="Clear" Style="{StaticResource DarkButton}" Margin="18,0,0,6" Padding="8,2"/></StackPanel>
  <TextBox x:Name="Console" Background="Transparent" Foreground="#B4E4FF" BorderThickness="0" FontFamily="Consolas" FontSize="11" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></DockPanel>
  </Border>
@@ -253,21 +253,29 @@ function Show-Tools {
   $labelStack = New-Object Windows.Controls.StackPanel
   $nameLabel = New-Object Windows.Controls.TextBlock
   $nameLabel.Text = $tool.Name
-  $nameLabel.FontWeight = 'SemiBold'
+  $nameLabel.FontWeight = 'Bold'
+  $nameLabel.FontSize = 16
   $nameLabel.Foreground = [Windows.Media.Brushes]::White
   $nameLabel.TextWrapping = 'Wrap'
   [void]$labelStack.Children.Add($nameLabel)
   $detailLabel = New-Object Windows.Controls.TextBlock
   $detailLabel.Text = $info
   $detailLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#CDEBFF')
-  $detailLabel.FontSize = 11
+  $detailLabel.FontSize = 13
   $detailLabel.TextWrapping = 'Wrap'
   $detailLabel.Margin = [Windows.Thickness]::new(0,5,0,0)
   [void]$labelStack.Children.Add($detailLabel)
+  $launchLabel = New-Object Windows.Controls.TextBlock
+  $launchLabel.Text = 'Launch   >'
+  $launchLabel.FontSize = 13
+  $launchLabel.FontWeight = 'SemiBold'
+  $launchLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#47DFFF')
+  $launchLabel.Margin = [Windows.Thickness]::new(0,18,0,0)
+  [void]$labelStack.Children.Add($launchLabel)
   $b.Content = $labelStack
   $b.HorizontalContentAlignment = 'Left'
-  $b.Width = 232
-  $b.MinHeight = 108
+  $b.Width = 362
+  $b.MinHeight = 165
   $b.Margin = '0,0,10,10'
   $b.Tag = $tool
   $b.ToolTip = "$info`nSource: $($tool.Url)"
@@ -414,7 +422,8 @@ foreach($cat in @('All utilities') + @($tools.Category | Sort-Object -Unique)) {
  $b.Content = $cat
  $b.Tag = $cat
  $b.HorizontalContentAlignment = 'Left'
- $b.Margin = '0,0,0,6'
+ $b.Margin = '0,0,0,9'
+ $b.FontSize = 14
  $b.Add_Click({param($sender,$e) $script:category = [string]$sender.Tag; Show-Tools})
  [void]$sidebar.Children.Add($b)
 }
@@ -428,7 +437,7 @@ $consentXaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         Title="YunehSSTool | Welcome" Width="560" Height="490"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#090F21" Foreground="White" FontFamily="Segoe UI"
+        Background="#030C1D" Foreground="White" FontFamily="Segoe UI"
         ShowInTaskbar="True">
   <Border Padding="28" BorderBrush="#3388C0" BorderThickness="2" CornerRadius="12">
     <Grid>
@@ -439,7 +448,7 @@ $consentXaml = @'
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       <StackPanel Grid.Row="0" Margin="0,0,0,18">
-        <TextBlock Text="YUNEH SS TOOL" FontSize="27" FontWeight="Bold" Foreground="#A3E7FF"/>
+        <TextBlock Text="YUNEH SS TOOL" FontSize="35" FontWeight="Bold" Foreground="#A3E7FF"/>
         <TextBlock Text="Screenshare consent" FontSize="16" Margin="0,7,0,0"/>
       </StackPanel>
       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -458,7 +467,7 @@ $consentXaml = @'
         <Button Grid.Column="0" Name="DeclineButton" Content="Decline" Height="39"
                 Background="#22364F" Foreground="White" BorderBrush="#52708D"/>
         <Button Grid.Column="2" Name="AcceptButton" Content="Accept &amp; Continue" Height="39"
-                Background="#1685C7" Foreground="White" BorderBrush="#6DD3FF" FontWeight="SemiBold" IsEnabled="False"/>
+                Background="#0878C9" Foreground="White" BorderBrush="#6DD3FF" FontWeight="SemiBold" IsEnabled="False"/>
       </Grid>
     </Grid>
   </Border>
