@@ -1,489 +1,965 @@
-# YunehSSTool - redesigned independent catalogue inspired by CheesySSTool
-# Downloads only after user chooses a save location. No background scans, uploads or remote script execution.
-# External utilities remain the work of their respective authors.
-Add-Type -AssemblyName PresentationFramework
-Add-Type -AssemblyName PresentationCore
-Add-Type -AssemblyName WindowsBase
-Add-Type -AssemblyName System.Windows.Forms
+# YunehSSTool - independently written local diagnostics
+# No external tools, telemetry, credential collection, or remote execution.
+# Read-only local checks require the computer owner's permission.
+param([string]$ScanId = '')
 $ErrorActionPreference = 'Stop'
-$tools = @(
-    [pscustomobject]@{Category='Orbdiff'; Name='PrefetchView'; Url='https://github.com/Orbdiff/PrefetchView'}
-    [pscustomobject]@{Category='Orbdiff'; Name='BAMReveal'; Url='https://github.com/Orbdiff/BAMReveal'}
-    [pscustomobject]@{Category='Orbdiff'; Name='StringsParser'; Url='https://github.com/Orbdiff/StringsParser'}
-    [pscustomobject]@{Category='Orbdiff'; Name='Fileless'; Url='https://github.com/Orbdiff/Fileless'}
-    [pscustomobject]@{Category='Orbdiff'; Name='DPS-Analyzer'; Url='https://github.com/Orbdiff/DPS-Analyzer'}
-    [pscustomobject]@{Category='Orbdiff'; Name='UserAssistView'; Url='https://github.com/Orbdiff/UserAssistView'}
-    [pscustomobject]@{Category='Orbdiff'; Name='JournalParser'; Url='https://github.com/Orbdiff/JournalParser'}
-    [pscustomobject]@{Category='Orbdiff'; Name='InjGen'; Url='https://github.com/Orbdiff/InjGen'}
-    [pscustomobject]@{Category='Orbdiff'; Name='USBDetector'; Url='https://github.com/Orbdiff/USBDetector'}
-    [pscustomobject]@{Category='Orbdiff'; Name='PFTrace'; Url='https://github.com/Orbdiff/PFTrace'}
-    [pscustomobject]@{Category='Orbdiff'; Name='CheckDeletedUSN'; Url='https://github.com/Orbdiff/CheckDeletedUSN'}
-    [pscustomobject]@{Category='Orbdiff'; Name='JARParser'; Url='https://github.com/Orbdiff/JARParser'}
-    [pscustomobject]@{Category='Spokwn'; Name='BAM-parser'; Url='https://github.com/spokwn/BAM-parser'}
-    [pscustomobject]@{Category='Spokwn'; Name='PathsParser'; Url='https://github.com/spokwn/PathsParser'}
-    [pscustomobject]@{Category='Spokwn'; Name='JournalTrace'; Url='https://github.com/spokwn/JournalTrace'}
-    [pscustomobject]@{Category='Spokwn'; Name='KernelLiveDumpTool'; Url='https://github.com/spokwn/KernelLiveDumpTool'}
-    [pscustomobject]@{Category='Spokwn'; Name='BamDeletedKeys'; Url='https://github.com/spokwn/BamDeletedKeys'}
-    [pscustomobject]@{Category='Spokwn'; Name='Tool'; Url='https://github.com/spokwn/Tool'}
-    [pscustomobject]@{Category='Spokwn'; Name='pcasvc-executed'; Url='https://github.com/spokwn/pcasvc-executed'}
-    [pscustomobject]@{Category='Spokwn'; Name='process-parser'; Url='https://github.com/spokwn/process-parser'}
-    [pscustomobject]@{Category='Spokwn'; Name='prefetch-parser'; Url='https://github.com/spokwn/prefetch-parser'}
-    [pscustomobject]@{Category='Spokwn'; Name='ActivitiesCache-execution'; Url='https://github.com/spokwn/ActivitiesCache-execution'}
-    [pscustomobject]@{Category='Tonynoh'; Name='MeowDoomsdayFucker'; Url='https://github.com/MeowTonynoh/MeowDoomsdayFucker'}
-    [pscustomobject]@{Category='Tonynoh'; Name='MeowModAnalyzer'; Url='https://github.com/MeowTonynoh/MeowModAnalyzer'}
-    [pscustomobject]@{Category='Tonynoh'; Name='MeowResolver'; Url='https://github.com/MeowTonynoh/MeowResolver'}
-    [pscustomobject]@{Category='Tonynoh'; Name='MeowNovowareFucker'; Url='https://github.com/MeowTonynoh/MeowNovowareFucker'}
-    [pscustomobject]@{Category='Tonynoh'; Name='MeowImportsChecker'; Url='https://github.com/MeowTonynoh/MeowImportsChecker'}
-    [pscustomobject]@{Category='Tonynoh'; Name='MeowClientFucker'; Url='https://github.com/MeowTonynoh/MeowClientFucker'}
-    [pscustomobject]@{Category='Praiselily'; Name='PSHunter'; Url='https://github.com/praiselily/PSHunter'}
-    [pscustomobject]@{Category='Praiselily'; Name='AltDetector'; Url='https://github.com/praiselily/AltDetector'}
-    [pscustomobject]@{Category='Praiselily'; Name='WeHateFakers'; Url='https://github.com/praiselily/WeHateFakers'}
-    [pscustomobject]@{Category='Praiselily'; Name='CommonDirectories'; Url='https://github.com/praiselily/lilith-ps'}
-    [pscustomobject]@{Category='Praiselily'; Name='HarddiskConverter'; Url='https://github.com/praiselily/lilith-ps'}
-    [pscustomobject]@{Category='Praiselily'; Name='Services'; Url='https://github.com/praiselily/lilith-ps'}
-    [pscustomobject]@{Category='Praiselily'; Name='Signed-Scheduled-Tasks'; Url='https://github.com/praiselily/lilith-ps'}
-    [pscustomobject]@{Category='RedLotus'; Name='RedLotus-Mod-Analyzer'; Url='https://github.com/ItzIceHere/RedLotus-Mod-Analyzer'}
-    [pscustomobject]@{Category='RedLotus'; Name='RedLotus-Task-Sentinel'; Url='https://github.com/ItzIceHere/RedLotus-Task-Sentinel'}
-    [pscustomobject]@{Category='RedLotus'; Name='RedLotusAltChecker'; Url='https://github.com/ItzIceHere/RedLotusAltChecker'}
-    [pscustomobject]@{Category='Others'; Name='Jarabel'; Url='https://github.com/nay-cat/Jarabel'}
-    [pscustomobject]@{Category='Others'; Name='Luyten'; Url='https://github.com/deathmarine/Luyten'}
-    [pscustomobject]@{Category='Others'; Name='VMAware'; Url='https://github.com/kernelwernel/VMAware'}
-    [pscustomobject]@{Category='Others'; Name='Velociraptor'; Url='https://github.com/Velocidex/velociraptor'}
-    [pscustomobject]@{Category='Others'; Name='NTFS Parser'; Url='https://github.com/thewhiteninja/ntfstool'}
-    [pscustomobject]@{Category='Others'; Name='Hayabusa'; Url='https://github.com/Yamato-Security/hayabusa'}
-    [pscustomobject]@{Category='Others'; Name='DIE-engine'; Url='https://github.com/horsicq/DIE-engine'}
-    [pscustomobject]@{Category='Others'; Name='MacroDetector'; Url='https://github.com/NiccBlahh/MacroDetector'}
-    [pscustomobject]@{Category='Others'; Name='ComputerActivityView'; Url='https://www.nirsoft.net/utils/computer_activity_view.html'}
-    [pscustomobject]@{Category='Others'; Name='SystemInformer'; Url='https://www.systeminformer.com/canary'}
-    [pscustomobject]@{Category='Others'; Name='Everything'; Url='https://www.voidtools.com/downloads/'}
-    [pscustomobject]@{Category='Others'; Name='HxD'; Url='https://mh-nexus.de/en/hxd/'}
-    [pscustomobject]@{Category='Zimmerman'; Name='AmcacheParser'; Url='https://download.ericzimmermanstools.com/net9/AmcacheParser.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='bstrings'; Url='https://download.ericzimmermanstools.com/net9/bstrings.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='JLECmd'; Url='https://download.ericzimmermanstools.com/net9/JLECmd.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='JumpListExplorer'; Url='https://download.ericzimmermanstools.com/net9/JumpListExplorer.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='MFTECmd'; Url='https://download.ericzimmermanstools.com/net9/MFTECmd.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='PECmd'; Url='https://download.ericzimmermanstools.com/net9/PECmd.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='RecentFileCacheParser'; Url='https://download.ericzimmermanstools.com/net9/RecentFileCacheParser.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='RegistryExplorer'; Url='https://download.ericzimmermanstools.com/net9/RegistryExplorer.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='ShellBagsExplorer'; Url='https://download.ericzimmermanstools.com/net9/ShellBagsExplorer.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='SrumECmd'; Url='https://download.ericzimmermanstools.com/net9/SrumECmd.zip'}
-    [pscustomobject]@{Category='Zimmerman'; Name='TimelineExplorer'; Url='https://download.ericzimmermanstools.com/net9/TimelineExplorer.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='FullEventLogView'; Url='https://www.nirsoft.net/utils/fulleventlogview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='NetworkUsageView'; Url='https://www.nirsoft.net/utils/networkusageview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='BrowserDownloadsView'; Url='https://www.nirsoft.net/utils/browserdownloadsview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='AlternateStreamView'; Url='https://www.nirsoft.net/utils/alternatestreamview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='USBDeview'; Url='https://www.nirsoft.net/utils/usbdeview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='OpenSaveFilesView'; Url='https://www.nirsoft.net/utils/opensavefilesview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='ExecutedProgramsList'; Url='https://www.nirsoft.net/utils/executedprogramslist.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='TaskSchedulerView'; Url='https://www.nirsoft.net/utils/taskschedulerview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='JumpListsView'; Url='https://www.nirsoft.net/utils/jumplistsview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='WinPrefetchView'; Url='https://www.nirsoft.net/utils/winprefetchview.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='RegScanner'; Url='https://www.nirsoft.net/utils/regscanner.zip'}
-    [pscustomobject]@{Category='NirSoft'; Name='ShellBagsView'; Url='https://www.nirsoft.net/utils/shellbagsview.zip'}
-    [pscustomobject]@{Category='Dependencies'; Name='.NET downloads'; Url='https://dotnet.microsoft.com/en-us/download/dotnet'}
-    [pscustomobject]@{Category='Dependencies'; Name='Visual C++ Redistributable'; Url='https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist'}
+try {
+ Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+ Add-Type -AssemblyName PresentationCore -ErrorAction Stop
+ Add-Type -AssemblyName WindowsBase -ErrorAction Stop
+} catch {
+ Write-Host ("YunehSSTool could not load the Windows interface: " + $_.Exception.Message) -ForegroundColor Red
+ Write-Host 'This PC may restrict PowerShell or Windows desktop components. Ask the PC owner or administrator.' -ForegroundColor Yellow
+ exit 1
+}
+
+# Embedded operator-supplied MacroDetector; no network access or automatic uploads.
+$script:MacroDetectorGzipBase64 = @'
+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
+'@
+function Invoke-YunehMacroDetector {
+ try {
+  $compressed=[Convert]::FromBase64String(($script:MacroDetectorGzipBase64 -replace '\s',''))
+  $ms=New-Object IO.MemoryStream(,$compressed)
+  $gz=New-Object IO.Compression.GzipStream($ms,[IO.Compression.CompressionMode]::Decompress)
+  $sr=New-Object IO.StreamReader($gz,[Text.Encoding]::UTF8)
+  try { $source=$sr.ReadToEnd() } finally { $sr.Dispose(); $gz.Dispose(); $ms.Dispose() }
+  & ([scriptblock]::Create($source))
+ } catch { Write-Host ("Macro Detector error: " + $_.Exception.Message) -ForegroundColor Red }
+}
+
+$script:tools = @()
+$local = @(
+ @('Minecraft mods','Minecraft mods folder','mods'),
+ @('Minecraft versions','Installed versions','versions'),
+ @('Minecraft logs','Recent log filenames','logs'),
+ @('Crash reports','Recent crash report filenames','crashes'),
+ @('Resource packs','Resource pack filenames','packs'),
+ @('Shader packs','Shader pack filenames','shaders'),
+ @('Minecraft configs','Config file names','config'),
+ @('Minecraft processes','Running Minecraft and launcher processes','minecraft'),
+ @('Java processes','Running Java processes','java'),
+ @('Macro processes','Common macro app process names','macro'),
+ @('Peripheral utilities','Mouse and keyboard utility processes','peripheral'),
+ @('All processes','Running process names and IDs','processes'),
+ @('Startup entries','Startup entry names','startup'),
+ @('Scheduled tasks','Task names and states','tasks'),
+ @('System summary','Windows OS and last boot','system'),
+ @('Recent downloads','Recent filenames only','downloads')
 )
-$toolDescriptions = @{
-  'PrefetchView' = 'Shows records of programs Windows may have run.'
-  'BAMReveal' = 'Checks Windows records of recently run programs.'
-  'StringsParser' = 'Finds readable text inside selected files.'
-  'Fileless' = 'Examines traces of activity that may not leave a normal file.'
-  'DPS-Analyzer' = 'Helps inspect Windows diagnostic service records.'
-  'UserAssistView' = 'Shows app-launch history saved by Windows.'
-  'JournalParser' = 'Reads file-system change records when available.'
-  'InjGen' = 'Specialised inspection utility; review its documentation first.'
-  'USBDetector' = 'Shows traces of USB devices connected to Windows.'
-  'PFTrace' = 'Examines Windows Prefetch activity records.'
-  'CheckDeletedUSN' = 'Checks file-system records for deleted-file activity.'
-  'JARParser' = 'Examines Java JAR files and their contents.'
-  'BAM-parser' = 'Reads Windows records of program execution.'
-  'PathsParser' = 'Helps examine file paths found in system records.'
-  'JournalTrace' = 'Checks file-system activity records.'
-  'KernelLiveDumpTool' = 'Advanced Windows memory diagnostics; may need admin access.'
-  'BamDeletedKeys' = 'Checks Windows execution records for removed entries.'
-  'Tool' = 'General diagnostic utility; read the developer instructions.'
-  'pcasvc-executed' = 'Looks for app-execution traces in Windows records.'
-  'process-parser' = 'Helps examine information about processes.'
-  'prefetch-parser' = 'Reads Windows Prefetch files for program activity.'
-  'ActivitiesCache-execution' = 'Checks activity history stored by Windows.'
-  'MeowDoomsdayFucker' = 'Specialised Minecraft client check; review the tool before use.'
-  'MeowModAnalyzer' = 'Examines Minecraft mod files for possible client modifications.'
-  'MeowResolver' = 'Minecraft-related investigation helper; check its instructions.'
-  'MeowNovowareFucker' = 'Specialised Minecraft client check; review before use.'
-  'MeowImportsChecker' = 'Checks imported components in files for clues.'
-  'MeowClientFucker' = 'Checks for signs linked to Minecraft clients; not proof alone.'
-  'PSHunter' = 'Helps inspect PowerShell-related activity.'
-  'AltDetector' = 'Helps look for signs of alternate accounts.'
-  'WeHateFakers' = 'Checks hotspot or network-related records.'
-  'CommonDirectories' = 'Opens or checks common Windows folders.'
-  'HarddiskConverter' = 'Disk information helper; check the instructions first.'
-  'Services' = 'Shows or checks Windows background services.'
-  'Signed-Scheduled-Tasks' = 'Checks scheduled tasks and their signatures.'
-  'RedLotus-Mod-Analyzer' = 'Examines Minecraft mods for suspicious modifications.'
-  'RedLotus-Task-Sentinel' = 'Helps review Windows scheduled tasks.'
-  'RedLotusAltChecker' = 'Helps investigate signs of alternate accounts.'
-  'Jarabel' = 'Helps examine Java JAR files.'
-  'Luyten' = 'Lets you inspect compiled Java code in JAR files.'
-  'VMAware' = 'Checks whether Windows appears to run in a virtual machine.'
-  'Velociraptor' = 'Advanced computer investigation and diagnostics platform.'
-  'NTFS Parser' = 'Reads information stored in the Windows file system.'
-  'Hayabusa' = 'Searches Windows event logs for notable activity.'
-  'DIE-engine' = 'Identifies file types and executable formats.'
-  'MacroDetector' = 'Looks for possible macro-related activity.'
-  'ComputerActivityView' = 'Shows a timeline of activity recorded by Windows.'
-  'SystemInformer' = 'Shows detailed information about running programs.'
-  'Everything' = 'Quickly searches for files and folders on the PC.'
-  'HxD' = 'Lets you inspect file contents as hexadecimal data.'
-  'AmcacheParser' = 'Reads Windows records of installed or run programs.'
-  'bstrings' = 'Finds readable text inside files.'
-  'JLECmd' = 'Reads Windows Jump List history.'
-  'JumpListExplorer' = 'Lets you browse Windows Jump List history.'
-  'MFTECmd' = 'Reads file-system metadata and file history.'
-  'PECmd' = 'Reads Windows Prefetch program-launch records.'
-  'RecentFileCacheParser' = 'Reads an older Windows recent-file record format.'
-  'RegistryExplorer' = 'Lets you browse Windows Registry data.'
-  'ShellBagsExplorer' = 'Shows Windows folder-browsing history.'
-  'SrumECmd' = 'Reads Windows resource and network-usage records.'
-  'TimelineExplorer' = 'Helps browse timelines exported by other tools.'
-  'FullEventLogView' = 'Shows Windows event logs in one searchable list.'
-  'NetworkUsageView' = 'Shows network usage recorded by Windows.'
-  'BrowserDownloadsView' = 'Shows download history saved by web browsers.'
-  'AlternateStreamView' = 'Lists hidden extra data streams attached to files.'
-  'USBDeview' = 'Shows USB devices Windows remembers.'
-  'OpenSaveFilesView' = 'Shows files opened or saved through Windows dialogs.'
-  'ExecutedProgramsList' = 'Shows traces of programs previously run.'
-  'TaskSchedulerView' = 'Lists Windows scheduled tasks.'
-  'JumpListsView' = 'Shows recent files recorded in Jump Lists.'
-  'WinPrefetchView' = 'Shows program launch information from Prefetch.'
-  'RegScanner' = 'Searches the Windows Registry for matching entries.'
-  'ShellBagsView' = 'Shows folder access traces saved by Windows.'
-  '.NET downloads' = 'Opens Microsoft downloads for required .NET components.'
-  'Visual C++ Redistributable' = 'Opens Microsoft downloads for required app libraries.'
+foreach($a in $local) {
+ $script:tools += [pscustomobject]@{Category='Local checks'; Name=$a[0]; Description=$a[1]; Url=$a[2]; Kind='Local'}
 }
-# Direct script sources identified from CheesySSTool; these require explicit review and confirmation.
-$scriptSources = @{
-  'MeowModAnalyzer' = 'https://raw.githubusercontent.com/MeowTonynoh/MeowModAnalyzer/main/MeowModAnalyzer.ps1'
-  'WeHateFakers' = 'https://raw.githubusercontent.com/praiselily/WeHateFakers/main/HotspotLogs.ps1'
-  'CommonDirectories' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/CommonDirectories.ps1'
-  'HarddiskConverter' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/HarddiskConverter.ps1'
-  'Services' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/Services.ps1'
-  'Signed-Scheduled-Tasks' = 'https://raw.githubusercontent.com/praiselily/lilith-ps/main/Signed-Scheduled-Tasks.ps1'
-  'MacroDetector' = 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/main/MacroDetector.ps1'
+# Dedicated staff-facing shortcuts. These are indicators, never proof of cheating.
+$finder = @(
+ @('Minecraft Mod Scanner','Lists installed Minecraft mods','mods'),
+ @('Client / Launcher Finder','Shows running Minecraft clients and launchers','minecraft'),
+ @('Macro Detector - Deep Scan','Mouse software, macro configurations and recent activity','macrodeep'),
+ @('Auto Clicker Detector','Checks running autoclicker apps and selected local filenames','autoclicker'),
+ @('Deleted Files - Last 10 Minutes','Shows recently recycled files with their deletion time; not permanently deleted files','recentdeleted'),
+ @('Mouse & Keyboard Macros','Detailed macro configuration and activity scan','macrodeep'),
+ @('JAR File Review','Finds JAR filenames in Minecraft and Downloads for manual review','jars'),
+ @('Minecraft Log Review','Lists recent Minecraft log filenames','logs'),
+ @('Version Review','Lists installed Minecraft versions','versions'),
+ @('Java Process Check','Shows running Java processes','java'),
+ @('Running Process Review','Shows running process names and IDs','processes'),
+ @('Recent Downloads Review','Lists recent download filenames','downloads'),
+ @('Startup Review','Lists Windows startup entry names','startup'),
+ @('Scheduled Task Review','Lists scheduled tasks and states','tasks'),
+ @('Crash Report Review','Lists recent Minecraft crash reports','crashes'),
+ @('Minecraft Config Review','Lists Minecraft configuration files','config')
+)
+$script:tools += [pscustomobject]@{Category='Servers - Last 2 Weeks'; Name='Minecraft Server History'; Description='Checks connection messages in Minecraft logs from the last 14 days'; Url='serverhistory'; Kind='Local'}
+foreach($a in $finder) {
+ $script:tools += [pscustomobject]@{Category='Yuneh Cheat finder'; Name=$a[0]; Description=$a[1]; Url=$a[2]; Kind='Local'}
 }
+
+$extra = @(
+ @('Minecraft','Launcher installations','Detects common launcher folders (names only)','launchers'),
+ @('Minecraft','Mod metadata review','Reads mod IDs from fabric.mod.json in local JARs','metadata'),
+ @('Minecraft','Mod SHA256 fingerprints','Computes local mod hashes for comparison','hashes'),
+ @('Minecraft','Game directory inventory','Lists Minecraft folders and sizes','inventory'),
+ @('Minecraft','Client filename indicators','Highlights known client names in local mods; verify manually','indicators'),
+ @('Windows','Prefetch file inventory','Lists Windows Prefetch filenames when accessible','prefetch'),
+ @('Windows','Windows recent shortcuts','Lists recent shortcut filenames','recent'),
+ @('Windows','Java runtime inventory','Lists installed Java commands and versions','javaruntime'),
+ @('Windows','Unsigned running executables','Checks signatures of accessible running executable paths','signatures'),
+ @('Windows','Running services','Lists service names and states','services'),
+ @('Windows','USB device names','Lists connected USB device names','usb'),
+ @('Windows','Macro script filenames','Finds AHK and AutoIt scripts in selected folders','scripts'),
+ @('Yuneh Cheat finder','Mod Metadata Analyzer','Shows Fabric mod identifiers where available','metadata'),
+ @('Yuneh Cheat finder','Known Client Name Review','Filename-based indicators, not proof','indicators'),
+ @('Yuneh Cheat finder','Macro Script Finder','Checks script filenames, not their content','scripts'),
+ @('Yuneh Cheat finder','Launcher Folder Finder','Lists common launcher folders','launchers'),
+ @('Yuneh Cheat finder','Mod Hash Viewer','Lists mod SHA256 hashes','hashes'),
+ @('Yuneh Cheat finder','Prefetch Viewer','Lists available Prefetch filenames','prefetch')
+)
+foreach($a in $extra) {
+ $script:tools += [pscustomobject]@{Category=$a[0]; Name=$a[1]; Description=$a[2]; Url=$a[3]; Kind='Local'}
+}
+# Official third-party project pages. Open in browser only; no silent installs.
+$officialDownloads = @(
+ @('Microsoft Sysinternals Suite','Official Microsoft Windows troubleshooting utilities','https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite'),
+ @('Process Explorer','Official Microsoft process inspection tool','https://learn.microsoft.com/en-us/sysinternals/downloads/process-explorer'),
+ @('Autoruns','Official Microsoft startup entry inspection tool','https://learn.microsoft.com/en-us/sysinternals/downloads/autoruns'),
+ @('Process Monitor','Official Microsoft process and file activity monitor','https://learn.microsoft.com/en-us/sysinternals/downloads/procmon'),
+ @('Everything Search','Official Voidtools file search download page','https://www.voidtools.com/downloads/'),
+ @('Fabric Loader','Official Fabric Minecraft loader download page','https://fabricmc.net/use/installer/'),
+ @('Modrinth App','Official Minecraft mod manager download page','https://modrinth.com/app'),
+ @('Prism Launcher','Official Minecraft launcher download page','https://prismlauncher.org/download/')
+)
+foreach($entry in $officialDownloads) {
+ $script:tools += [pscustomobject]@{
+  Category='Downloads'; Name=$entry[0]; Description=$entry[1];
+  Url=$entry[2]; Kind='External link'
+ }
+}
+
+function Get-YunehModFolders {
+ $roots = @(
+  (Join-Path $env:APPDATA '.minecraft'),
+  (Join-Path $env:USERPROFILE '.lunarclient'),
+  (Join-Path $env:APPDATA '.lunarclient'),
+  (Join-Path $env:APPDATA 'PrismLauncher\\instances'),
+  (Join-Path $env:APPDATA 'MultiMC\\instances'),
+  (Join-Path $env:APPDATA 'ATLauncher\\instances'),
+  (Join-Path $env:APPDATA 'ModrinthApp\\profiles'),
+  (Join-Path $env:APPDATA 'com.modrinth.theseus\\profiles'),
+  (Join-Path $env:APPDATA 'Feather Client'),
+  (Join-Path $env:APPDATA 'Badlion Client'),
+  (Join-Path $env:USERPROFILE 'curseforge\\minecraft\\Instances')
+ )
+ $found = @{}
+ foreach($root in $roots) {
+  if(-not (Test-Path -LiteralPath $root -PathType Container)){continue}
+  $candidates = @((Join-Path $root 'mods'),(Join-Path $root '.minecraft\\mods'),(Join-Path $root 'minecraft\\mods'))
+  # Inspect instance directories only one level deep; do not scan the entire drive.
+  foreach($sub in @(Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue | Select-Object -First 70)) {
+   $candidates += (Join-Path $sub.FullName 'mods')
+   $candidates += (Join-Path $sub.FullName '.minecraft\\mods')
+   $candidates += (Join-Path $sub.FullName 'minecraft\\mods')
+  }
+  foreach($folder in $candidates) {
+   if((Test-Path -LiteralPath $folder -PathType Container) -and -not $found.ContainsKey($folder)){$found[$folder]=$true}
+  }
+ }
+ return @($found.Keys | Sort-Object)
+}
+function Get-YunehModFiles {
+ $files = @()
+ foreach($folder in @(Get-YunehModFolders)) {
+  $files += @(Get-ChildItem -LiteralPath $folder -File -ErrorAction SilentlyContinue |
+   Where-Object {$_.Extension -in @('.jar','.zip')} | Select-Object -First 200)
+ }
+ return @($files | Sort-Object FullName -Unique)
+}
+
+# Optional third-party executable supplied by the operator. Never downloaded or run automatically.
+# Its source and safety have not been independently verified.
+$script:tools += [pscustomobject]@{
+ Category='Yuneh Cheat finder'; Name='Client Checker - External Utility';
+ Description='Choose the provided MeowClientFucker.exe and review before running';
+ Url='external-client-checker'; Kind='External executable'
+}
+
+function Scan-Local([string]$id) {
+ $output = New-Object System.Collections.Generic.List[string]
+ $base = Join-Path $env:APPDATA '.minecraft'
+ switch($id) {
+  'serverhistory' {
+   # Report heading is added after scanning so the output stays compact.
+   Write-Host '[1/3] Finding Minecraft log folders...' -ForegroundColor Cyan
+   $cutoff = (Get-Date).AddDays(-14)
+   # Scan known launcher data directories and their Minecraft instance logs.
+   # Only local user folders; no network requests, hidden collection or uploads.
+   $roots = @(
+    (Join-Path $env:APPDATA '.minecraft'),
+    (Join-Path $env:USERPROFILE '.lunarclient'),
+    (Join-Path $env:APPDATA '.lunarclient'),
+    (Join-Path $env:APPDATA '.feather'),
+    (Join-Path $env:APPDATA 'Feather Client'),
+    (Join-Path $env:APPDATA 'Badlion Client'),
+    (Join-Path $env:APPDATA 'PrismLauncher'),
+    (Join-Path $env:APPDATA 'MultiMC'),
+    (Join-Path $env:APPDATA 'ATLauncher'),
+    (Join-Path $env:APPDATA 'ModrinthApp'),
+    (Join-Path $env:APPDATA 'com.modrinth.theseus'),
+    (Join-Path $env:APPDATA 'GDLauncher'),
+    (Join-Path $env:APPDATA 'gdlauncher_next'),
+    (Join-Path $env:APPDATA 'CurseForge'),
+    (Join-Path $env:LOCALAPPDATA 'Programs\PrismLauncher'),
+    (Join-Path $env:USERPROFILE 'curseforge\minecraft'),
+    (Join-Path $env:USERPROFILE 'Documents\CurseForge\Minecraft'),
+    (Join-Path $env:APPDATA 'PolyMC'),
+    (Join-Path $env:APPDATA 'HMCL'),
+    (Join-Path $env:APPDATA 'SKlauncher'),
+    (Join-Path $env:APPDATA 'minecraft'),
+    (Join-Path $env:LOCALAPPDATA 'ModrinthApp'),
+    (Join-Path $env:LOCALAPPDATA 'PrismLauncher'),
+    (Join-Path $env:APPDATA 'Crystal-Launcher'),
+    (Join-Path $env:APPDATA 'TLauncher'),
+    (Join-Path $env:APPDATA 'Lunar Client')
+   ) | Select-Object -Unique
+   $logFiles = New-Object System.Collections.Generic.List[object]
+   $linesRead = 0; $candidateLines = 0; $missingAddress = 0; $logErrors = 0
+   $scanStarted = Get-Date
+   $seen = @{}
+   $visited = @{}
+   foreach($root in $roots) {
+    if(-not (Test-Path -LiteralPath $root -PathType Container)){continue}
+    # Breadth-first discovery, limited to 5 levels / 500 folders per launcher.
+    $queue = New-Object System.Collections.Queue
+    $queue.Enqueue(@($root,0))
+    $folderCount = 0
+    while($queue.Count -gt 0 -and $folderCount -lt 1000) {
+     $node = $queue.Dequeue(); $dir = [string]$node[0]; $depth = [int]$node[1]
+     if($visited.ContainsKey($dir)){continue}
+     $visited[$dir]=$true; $folderCount++
+     if((Split-Path $dir -Leaf) -match '^(?i:logs|log)$') {
+      foreach($file in @(Get-ChildItem -LiteralPath $dir -File -ErrorAction SilentlyContinue | Where-Object {
+       $_.Name -match '(?i)\.(log|log\.gz|txt)$' -and
+       ($_.LastWriteTime -ge $cutoff -or $_.Name -match '^\d{4}-\d{2}-\d{2}')
+      } | Select-Object -First 120)) {
+       if(-not $seen.ContainsKey($file.FullName)){$seen[$file.FullName]=$true;$logFiles.Add($file)}
+      }
+      continue
+     }
+     if($depth -ge 7){continue}
+     foreach($child in @(Get-ChildItem -LiteralPath $dir -Directory -ErrorAction SilentlyContinue | Select-Object -First 150)) {
+      if($child.Name -match '^(?i:cache|caches|libraries|assets|runtime|natives|mods|resourcepacks|shaderpacks|screenshots|backups|downloads|versions)$'){continue}
+      $queue.Enqueue(@($child.FullName,$depth+1))
+     }
+    }
+   }
+   # Skip archives whose filename dates are outside the requested 14-day window.
+   # A filename date is used for filtering only, not as proof of a connection.
+   $recentFiles = @($logFiles | Where-Object {
+    $f = $_
+    if($f.Name -match '^(\d{4}-\d{2}-\d{2})(?:-|\.)') {
+     $d=[datetime]::MinValue
+     if([datetime]::TryParseExact($Matches[1],'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture,[Globalization.DateTimeStyles]::None,[ref]$d)) {
+      return ($d.Date -ge $cutoff.Date -and $d.Date -le $scanStarted.Date)
+     }
+    }
+    return ($f.LastWriteTime -ge $cutoff)
+   } | Sort-Object LastWriteTime -Descending | Select-Object -First 120)
+   Write-Host ('[2/3] Checking {0} recent log(s) (skipped {1} older files)...' -f $recentFiles.Count,($logFiles.Count-$recentFiles.Count)) -ForegroundColor Cyan
+   $results = New-Object System.Collections.Generic.List[object]
+   foreach($file in $recentFiles) {
+    if($file.Length -gt 20000000){continue}
+    try {
+     $stream=[IO.File]::OpenRead($file.FullName)
+     try {
+      if($file.Name -match '\.gz$') {
+       $gz=New-Object IO.Compression.GzipStream($stream,[IO.Compression.CompressionMode]::Decompress)
+       $reader=New-Object IO.StreamReader($gz)
+      } else {$reader=New-Object IO.StreamReader($stream)}
+      try {
+       $lineNumber=0
+       while(-not $reader.EndOfStream -and $lineNumber -lt 150000) {
+        $line=$reader.ReadLine(); $lineNumber++
+        # Only join/connect events; a saved servers list alone does not prove play.
+        $linesRead++
+        # Minecraft clients differ: vanilla logs 'Connecting to host, 25565',
+        # others log 'Joining host' or 'connect(host:port)'.
+        if($line -notmatch '(?i)(connecting to|connected to|joining (?:server|multiplayer|world)|multiplayer\.connect|attempting to connect|server connection|connect(?:ion)?\s*\(|server address\s*[:=]|joining\s+((?:[a-z0-9-]+\.)+[a-z]{2,}))'){continue}
+        $candidateLines++
+        if($line -match '(?i)(authserver\.mojang\.com|sessionserver\.mojang\.com|api\.minecraftservices\.com)'){continue}
+        $detail=$line -replace '(?i)^.*?\b(connecting to|connected to|joining server|joining multiplayer|multiplayer\.connect|attempting to connect|server connection)\b\s*(?:server)?\s*[:=\-]?\s*',''
+        $server='Not recorded'
+        # Domain/IP, optionally followed by a port; reject arbitrary launcher URLs.
+        if($detail -match '(?i)(?<![a-z0-9_.-])((?:[a-z0-9-]+\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})(?::\d{1,5})?(?![a-z0-9_.-])'){$server=$Matches[0]}
+        # Some clients log 'Connecting to hostname, 25565'.
+        if($server -ne 'Not recorded' -and $detail -match '(?i)\bport\s*[=:]?\s*(\d{2,5})\b' -and $server -notmatch ':\d+$'){$server+=':'+$Matches[1]}
+        $stamp=$null; $quality='Unknown'
+        if($line -match '(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})') {
+         $parsed=[datetime]::MinValue
+         if([datetime]::TryParseExact(($Matches[1]+' '+$Matches[2]),'yyyy-MM-dd HH:mm:ss',[Globalization.CultureInfo]::InvariantCulture,[Globalization.DateTimeStyles]::None,[ref]$parsed)){$stamp=$parsed;$quality='Log timestamp'}
+        } elseif($line -match '^\[(\d{2}:\d{2}:\d{2})(?:\.\d+)?\]') {
+         $clock=$Matches[1]
+         # Rotated Minecraft log filenames often contain a date: 2026-10-24-1.log.gz.
+         if($file.Name -match '^(\d{4}-\d{2}-\d{2})(?:-|\.)') {
+          $datePart=$Matches[1];$parsed=[datetime]::MinValue
+          if([datetime]::TryParseExact(($datePart+' '+$clock),'yyyy-MM-dd HH:mm:ss',[Globalization.CultureInfo]::InvariantCulture,[Globalization.DateTimeStyles]::None,[ref]$parsed)){$stamp=$parsed;$quality='Filename date + log time'}
+         } else {$quality='Time only: '+$clock}
+        }
+        if(-not $stamp -and $quality -like 'Time only:*' -and $file.Name -eq 'latest.log') {
+         # LastWriteTime date is an estimate, not proof of when the connection happened.
+         $clock=$quality.Substring(11)
+         try { $stamp=[datetime]::ParseExact(($file.LastWriteTime.ToString('yyyy-MM-dd')+' '+$clock),'yyyy-MM-dd HH:mm:ss',[Globalization.CultureInfo]::InvariantCulture); $quality='Estimated: latest.log file date' } catch {}
+        }
+        if($stamp -and ($stamp -lt $cutoff -or $stamp -gt $scanStarted.AddMinutes(2))){continue}
+        if($server -eq 'Not recorded' -or $server -match '(?i)^(?:gg\.|com\.|org\.|net\.)'){$missingAddress++;continue}
+        $results.Add([pscustomobject]@{Stamp=$stamp;Server=$server;Quality=$quality;Source=$file.Name;Path=$file.FullName})
+        if($results.Count -ge 500){break}
+       }
+      } finally {$reader.Dispose()}
+     } finally {$stream.Dispose()}
+    } catch {$logErrors++; $output.Add('Unreadable log: '+$file.Name+' ('+$_.Exception.Message+')')}
+    if($results.Count -ge 500){break}
+   }
+   Write-Host ('[3/3] Formatting {0} connection event(s)...' -f $results.Count) -ForegroundColor Cyan
+   $dated = @($results | Where-Object { $null -ne $_.Stamp } | Sort-Object Stamp -Descending)
+   $undatedCount = @($results | Where-Object { $null -eq $_.Stamp }).Count
+   $groups = @($dated | Group-Object Server | ForEach-Object {
+    [pscustomobject]@{Server=$_.Name;Last=$_.Group[0].Stamp;Count=$_.Count}
+   } | Sort-Object Last -Descending)
+   $output.Add('')
+   $output.Add('  +--------------------------------------------------------------------------+')
+   $output.Add('  |  Y U N E H   /   S E R V E R   H I S T O R Y                          |')
+   $output.Add('  +--------------------------------------------------------------------------+')
+   $output.Add(('  LAST 14 DAYS  |  {0:dd MMM yyyy, HH:mm}  |  LOCAL / READ-ONLY' -f $scanStarted))
+   $output.Add('')
+   $output.Add(('  {0} UNIQUE SERVERS     {1} EVENTS     {2} LOGS CHECKED' -f $groups.Count,$dated.Count,$recentFiles.Count))
+   $output.Add('')
+   $output.Add('  [01] SERVER OVERVIEW')
+   $output.Add('  --------------------------------------------------------------------------')
+   $output.Add(('  {0,-38} {1,-19} {2,7}' -f 'ADDRESS','LAST SEEN','EVENTS'))
+   $output.Add('  --------------------------------------------------------------------------')
+   foreach($g in $groups){
+    $address=$g.Server
+    if($address.Length -gt 38){$address=$address.Substring(0,35)+'...'}
+    $output.Add(('  {0,-38} {1,-19} {2,7}' -f $address,$g.Last.ToString('dd MMM yyyy HH:mm'),$g.Count))
+   }
+   if($groups.Count -eq 0){$output.Add('  No dated connections found in available logs.')}
+   $output.Add('')
+   $output.Add('  [02] LATEST CONNECTION EVENTS')
+   $output.Add('  --------------------------------------------------------------------------')
+   $output.Add(('  {0,-20} {1,-38}' -f 'DATE / TIME','SERVER ADDRESS'))
+   $output.Add('  --------------------------------------------------------------------------')
+   foreach($item in @($dated | Select-Object -First 15)){
+    $address=$item.Server
+    if($address.Length -gt 38){$address=$address.Substring(0,35)+'...'}
+    $output.Add(('  {0,-20} {1,-38}' -f $item.Stamp.ToString('dd MMM yyyy HH:mm:ss'),$address))
+   }
+   if($dated.Count -gt 15){$output.Add(('  ... and {0} more event(s) (see overview above).' -f ($dated.Count-15)))}
+   $output.Add('')
+   $output.Add('  [03] SCAN STATUS')
+   $output.Add('  --------------------------------------------------------------------------')
+   $output.Add(('  Log lines: {0:N0}  |  Possible matches: {1:N0}  |  Unreadable: {2}' -f $linesRead,$candidateLines,$logErrors))
+   if($undatedCount -gt 0){$output.Add(('  {0} undated record(s) excluded from the 14-day results.' -f $undatedCount))}
+   $output.Add('  Times may be inferred from log filenames; they are not verified play proof.')
+   $output.Add('  Missing/rotated logs may leave out connections. Nothing is uploaded.')
+   $output.Add('  --------------------------------------------------------------------------')
+   break
+  }
+  'recentdeleted' {
+   $output.Add('RECYCLE BIN - ITEMS DELETED IN THE LAST 10 MINUTES')
+   $output.Add('Only files still in the Recycle Bin are visible. Permanent deletions, emptied items and many app deletions cannot be shown.')
+   $output.Add('Results are not proof of cheating or concealment.')
+   $output.Add('')
+   $cutoff = (Get-Date).AddMinutes(-10)
+   $count = 0
+   $seen = @{}
+   $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+   foreach($drive in @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction SilentlyContinue)) {
+    $root = Join-Path ($drive.DeviceID + '\') ('$Recycle.Bin\' + $sid)
+    if(-not (Test-Path -LiteralPath $root)){ continue }
+    foreach($entry in @(Get-ChildItem -LiteralPath $root -Filter '$I*' -Force -File -ErrorAction SilentlyContinue)) {
+     try {
+      $bytes = [IO.File]::ReadAllBytes($entry.FullName)
+      if($bytes.Length -lt 24){continue}
+      $version = [BitConverter]::ToInt64($bytes,0)
+      $deleted = [DateTime]::FromFileTimeUtc([BitConverter]::ToInt64($bytes,16)).ToLocalTime()
+      if($deleted -lt $cutoff -or $deleted -gt (Get-Date).AddMinutes(1)){continue}
+      $offset = if($version -eq 2){28}else{24}
+      if($bytes.Length -le $offset){continue}
+      $path = [Text.Encoding]::Unicode.GetString($bytes,$offset,$bytes.Length-$offset).Split([char]0)[0]
+      if([string]::IsNullOrWhiteSpace($path)){ $path='(original path unavailable)' }
+      $key = $entry.FullName
+      if(-not $seen.ContainsKey($key)){
+       $seen[$key]=$true
+       $output.Add(('{0:yyyy-MM-dd HH:mm:ss}  {1}' -f $deleted,$path))
+       $count++
+      }
+     } catch { continue }
+    }
+   }
+   if($count -eq 0){$output.Add('No matching Recycle Bin records found (or access was restricted).')}
+   $output.Add('')
+   $output.Add("Found $count recently recycled item(s).")
+   break
+  }
+  'autoclicker' {
+   $output.Add('AUTO CLICKER DETECTOR - manual review only')
+   $output.Add('A matching name does not prove the app was used in Minecraft.')
+   $output.Add('')
+   $pattern = '(?i)auto.?click|op.?auto.?click|gs.?auto.?click|speed.?auto.?click|free.?auto.?click|tiny.?task|auto.?hotkey|autoit|macro.?recorder|pulover|x.?mouse.?button'
+   $output.Add('--- Running processes (name matches) ---')
+   $matches = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match $pattern } | Sort-Object ProcessName)
+   if($matches.Count -eq 0) { $output.Add('No matching running process names found.') }
+   foreach($proc in $matches) { $output.Add("$($proc.ProcessName)  PID $($proc.Id)") }
+   $output.Add('')
+   $output.Add('--- Relevant filenames (Desktop and Downloads; first 75) ---')
+   $folders = @((Join-Path $env:USERPROFILE 'Desktop'),(Join-Path $env:USERPROFILE 'Downloads'))
+   $fileCount = 0
+   foreach($folder in $folders) {
+    if(-not (Test-Path -LiteralPath $folder)) { continue }
+    Get-ChildItem -LiteralPath $folder -File -ErrorAction SilentlyContinue | Where-Object {
+     $_.Name -match $pattern -or $_.Extension -in @('.ahk','.au3')
+    } | Select-Object -First (75 - $fileCount) | ForEach-Object {
+     $output.Add("$($_.Name)  [$folder]")
+     $fileCount++
+    }
+    if($fileCount -ge 75) { break }
+   }
+   if($fileCount -eq 0) { $output.Add('No matching filenames found in these folders.') }
+   $output.Add('')
+   $output.Add('This is not a behavioural click-rate test and cannot rule out an autoclicker.')
+   break
+  }
+
+
+  'launchers' {
+   $paths = @(
+    (Join-Path $env:APPDATA '.minecraft'),(Join-Path $env:APPDATA 'PrismLauncher'),
+    (Join-Path $env:APPDATA 'MultiMC'),(Join-Path $env:APPDATA 'lunarclient'),
+    (Join-Path $env:APPDATA '.feather'),(Join-Path $env:LOCALAPPDATA 'ModrinthApp'),
+    (Join-Path $env:LOCALAPPDATA 'Programs\Modrinth App'),(Join-Path $env:APPDATA 'ATLauncher'),
+    (Join-Path $env:APPDATA 'gdlauncher_next'),(Join-Path $env:APPDATA '.tlauncher')
+   )
+   foreach($p in $paths){ if(Test-Path -LiteralPath $p){$output.Add("Found folder: $p")} }
+   break
+  }
+  'metadata' {
+   Add-Type -AssemblyName System.IO.Compression
+   $files = @(Get-YunehModFiles)
+   $output.Add("Mod files found across launcher folders: $($files.Count)")
+   foreach($file in @($files | Select-Object -First 250)) {
+    $zip=$null
+    try {
+     $zip=[IO.Compression.ZipFile]::OpenRead($file.FullName)
+     $entry=$zip.GetEntry('fabric.mod.json')
+     if($null -ne $entry) {
+      $reader=New-Object IO.StreamReader($entry.Open())
+      try {$meta=$reader.ReadToEnd() | ConvertFrom-Json; $output.Add("$($file.FullName) : $($meta.id) / $($meta.version)")}
+      finally {$reader.Dispose()}
+     } else {$output.Add("$($file.FullName) : Fabric metadata not present")}
+    } catch {$output.Add("$($file.FullName) : cannot read archive")}
+    finally {if($zip){$zip.Dispose()}}
+   }
+   break
+  }
+  'hashes' {
+   $files=@(Get-YunehModFiles)
+   $output.Add("Mod files found across launcher folders: $($files.Count)")
+   foreach($file in @($files | Select-Object -First 250)) {
+    try {$hash=Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256; $output.Add("$($file.FullName) : $($hash.Hash)")}
+    catch {$output.Add("Cannot hash: $($file.FullName)")}
+   }
+   break
+  }
+  'inventory' {
+   foreach($folder in @(Get-YunehModFolders)) {$output.Add("Mods directory: $folder")}
+   break
+  }
+  'indicators' {
+   $pattern='(?i)meteor|wurst|liquidbounce|impact|aristois|rusherhack|bleachhack|futureclient|inertia|vape|raven|baritone|client'
+   $files=@(Get-YunehModFiles)
+   $output.Add("Mod files reviewed: $($files.Count)")
+   $matches=@($files | Where-Object {$_.Name -match $pattern})
+   foreach($file in $matches) {$output.Add("Filename indicator (verify manually): $($file.FullName)")}
+   if($matches.Count -eq 0){$output.Add('No filename indicators matched. This does not rule out a renamed or external client.')}
+   break
+  }
+  'prefetch' {
+   $dir=Join-Path $env:SystemRoot 'Prefetch'
+   if(Test-Path $dir){Get-ChildItem -LiteralPath $dir -Filter '*.pf' -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 100 | ForEach-Object {$output.Add("$($_.LastWriteTime)  $($_.Name)")}}
+   break
+  }
+  'recent' {
+   $dir=Join-Path $env:APPDATA 'Microsoft\Windows\Recent'
+   if(Test-Path $dir){Get-ChildItem -LiteralPath $dir -Filter '*.lnk' -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 100 | ForEach-Object {$output.Add($_.Name)}}
+   break
+  }
+  'javaruntime' {
+   Get-Command java,javaw -All -ErrorAction SilentlyContinue | ForEach-Object {$output.Add("$($_.Name) : $($_.Source)")}
+   break
+  }
+  'signatures' {
+   $paths=Get-Process -ErrorAction SilentlyContinue | ForEach-Object {try{$_.Path}catch{$null}} | Where-Object {$_} | Sort-Object -Unique | Select-Object -First 80
+   foreach($path in $paths){try{$sig=Get-AuthenticodeSignature -LiteralPath $path -ErrorAction Stop; if($sig.Status -ne 'Valid'){$output.Add("$($sig.Status) : $path")}}catch{}}
+   break
+  }
+  'services' {Get-Service -ErrorAction SilentlyContinue | Select-Object -First 160 | ForEach-Object {$output.Add("$($_.Status)  $($_.Name)")};break}
+  'usb' {Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue | Where-Object {$_.PNPDeviceID -like 'USB*'} | Select-Object -First 80 | ForEach-Object {$output.Add($_.Name)};break}
+  'scripts' {
+   foreach($folder in @((Join-Path $env:USERPROFILE 'Downloads'),(Join-Path $env:USERPROFILE 'Desktop'),(Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup'))) {
+    if(Test-Path $folder){Get-ChildItem -LiteralPath $folder -File -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Extension -in @('.ahk','.au3')} | Select-Object -First 50 | ForEach-Object {$output.Add($_.FullName)}}
+   }
+   break
+  }
+
+  'jars' {
+   $files=@(Get-YunehModFiles)
+   $output.Add("Minecraft mod archives found: $($files.Count)")
+   foreach($file in @($files | Select-Object -First 250)) {$output.Add("$($file.LastWriteTime.ToString('yyyy-MM-dd HH:mm'))  $($file.FullName)")}
+   $downloads=Join-Path $env:USERPROFILE 'Downloads'
+   if(Test-Path -LiteralPath $downloads) {
+    $output.Add('--- Recent JAR files in Downloads ---')
+    Get-ChildItem -LiteralPath $downloads -Filter '*.jar' -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 60 | ForEach-Object {$output.Add($_.FullName)}
+   }
+   break
+  }
+  'mods' {
+   $folders=@(Get-YunehModFolders)
+   $output.Add("Accessible Minecraft mod folders: $($folders.Count)")
+   foreach($folder in $folders) {
+    $output.Add("--- $folder ---")
+    $files=@(Get-ChildItem -LiteralPath $folder -File -ErrorAction SilentlyContinue | Select-Object -First 200)
+    if($files.Count -eq 0){$output.Add('No files in this folder')}
+    foreach($file in $files){$output.Add("$($file.LastWriteTime.ToString('yyyy-MM-dd HH:mm'))  $($file.Name)")}
+   }
+   if($folders.Count -eq 0){$output.Add('No supported mod folders accessible. This does NOT mean no mods or cheats exist.')}
+   break
+  }
+  {$_ -in @('versions','logs','crashes','packs','shaders','config','downloads')} {
+   $relative = @{mods='mods';versions='versions';logs='logs';crashes='crash-reports';packs='resourcepacks';shaders='shaderpacks';config='config'}
+   $folder = if($id -eq 'downloads') { Join-Path $env:USERPROFILE 'Downloads' } else { Join-Path $base $relative[$id] }
+   if(Test-Path -LiteralPath $folder) {
+    Get-ChildItem -LiteralPath $folder -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 100 | ForEach-Object { $output.Add("$($_.LastWriteTime.ToString('yyyy-MM-dd HH:mm'))  $($_.Name)") }
+   } else { $output.Add('Folder not found.') }
+   break
+  }
+  {$_ -in @('minecraft','java','macro','peripheral','processes')} {
+   $pattern = @{minecraft='minecraft|javaw|lunar|badlion|prism|multimc';java='^javaw?$';macro='autohotkey|autoit|macro|tinytask|pulover';peripheral='lghub|ghub|razer|synapse|icue|steelseries|roccat'}
+   $procs = @(Get-Process -ErrorAction SilentlyContinue | Sort-Object ProcessName)
+   if($id -ne 'processes') { $procs = @($procs | Where-Object { $_.ProcessName -match $pattern[$id] }) }
+   $procs | Select-Object -First 200 | ForEach-Object { $output.Add("$($_.ProcessName)  PID $($_.Id)") }
+   break
+  }
+  'startup' { Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue | Select-Object -First 100 | ForEach-Object { $output.Add($_.Name) }; break }
+  'tasks' { Get-ScheduledTask -ErrorAction SilentlyContinue | Select-Object -First 100 | ForEach-Object { $output.Add("$($_.TaskName) [$($_.State)]") }; break }
+  'system' { $os=Get-CimInstance Win32_OperatingSystem; $output.Add("OS: $($os.Caption)"); $output.Add("Version: $($os.Version)"); $output.Add("Last boot: $($os.LastBootUpTime)"); break }
+ }
+ if($output.Count -eq 0){ $output.Add('No entries found in the checked locations. This does NOT establish that the PC is clean.') }
+ return ($output -join [Environment]::NewLine)
+}
+
+# Command-line mode: a single explicitly selected detector.
+if($ScanId) {
+ $chosen = @($script:tools | Where-Object { $_.Url -eq $ScanId -and $_.Kind -eq 'Local' } | Select-Object -First 1)
+ if($chosen.Count -ne 1) { Write-Host 'Unknown detector.' -ForegroundColor Red; exit 2 }
+ if($ScanId -ne 'serverhistory') {
+  Write-Host ''
+  Write-Host '===============================================' -ForegroundColor Cyan
+  Write-Host ' YUNEH CHEAT FINDER' -ForegroundColor Cyan
+  Write-Host '===============================================' -ForegroundColor Cyan
+  Write-Host ("Detector: " + $chosen[0].Name)
+  Write-Host 'Read-only scan. Results are indicators, not proof.' -ForegroundColor Yellow
+  Write-Host 'Please wait while the scanner checks local files...' -ForegroundColor DarkGray
+  Write-Host ''
+ } else { Write-Host '  YUNEH / Finding Minecraft server connections...' -ForegroundColor Cyan }
+ if($ScanId -eq 'macrodeep') { Invoke-YunehMacroDetector; exit }
+ try { Write-Host (Scan-Local $ScanId) }
+ catch { Write-Host ("Scan error: " + $_.Exception.Message) -ForegroundColor Red }
+ Write-Host ''
+ Write-Host 'Scan complete. Close this CMD window when finished.' -ForegroundColor Green
+ exit
+}
+
 [xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Utility Library" Width="1120" Height="720" MinWidth="850" MinHeight="570" WindowStartupLocation="CenterScreen" Background="#030B18" FontFamily="Segoe UI">
-<Window.Resources>
-<Style x:Key="DarkButton" TargetType="Button">
- <Setter Property="Foreground" Value="#F5FAFF"/><Setter Property="Background" Value="#08274B"/><Setter Property="BorderBrush" Value="#00BFFF"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="11,9"/><Setter Property="Cursor" Value="Hand"/>
- <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="13" SnapsToDevicePixels="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" Margin="5,0"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Background" Value="#056DB5"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bg" Property="Background" Value="#05436C"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
-</Style>
-</Window.Resources>
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="YunehSSTool | Y. Edition" Width="1240" Height="780" MinWidth="950" MinHeight="600" Background="#07090D" WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
 <Grid>
- <Grid.ColumnDefinitions><ColumnDefinition Width="215"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
- <Border BorderBrush="#2B6594" BorderThickness="0,0,1,0"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#020B18" Offset="0"/><GradientStop Color="#082E56" Offset="1"/></LinearGradientBrush></Border.Background><DockPanel Margin="12">
- <StackPanel DockPanel.Dock="Top" Margin="8,14,8,16"><Border Width="70" Height="70" HorizontalAlignment="Left" CornerRadius="18" BorderBrush="#63C9FF" BorderThickness="1" Margin="0,0,0,12"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#18588B" Offset="0"/><GradientStop Color="#0C2544" Offset="1"/></LinearGradientBrush></Border.Background><TextBlock Text="Y." FontSize="42" FontWeight="Bold" Foreground="#31D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="YUNEH SS TOOL" FontSize="17" FontWeight="Bold" Foreground="White"/><TextBlock Text="UTILITY LIBRARY" Foreground="#89CFFF" FontSize="10" Margin="0,5,0,0"/><Separator Margin="0,14,0,0" Background="#325778"/></StackPanel>
- <StackPanel DockPanel.Dock="Bottom" Margin="6,12"><TextBlock Text="Consent-based diagnostics" Foreground="#A3D8FF" FontSize="11"/><TextBlock Text="Click to launch an installed tool. Downloads require permission. Verified executable files can be launched after confirmation." TextWrapping="Wrap" Foreground="#91A7BA" FontSize="10" Margin="0,6,0,0"/></StackPanel>
- <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Sidebar"/></ScrollViewer>
- </DockPanel></Border>
- <Grid Grid.Column="1" Margin="15,16,15,14">
- <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="115"/></Grid.RowDefinitions>
- <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="245"/></Grid.ColumnDefinitions>
- <StackPanel><TextBlock x:Name="Heading" Text="All utilities" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock x:Name="CountText" Text="" Foreground="#9ABAD2" Margin="0,5,0,14"/></StackPanel>
- <TextBox x:Name="Search" Grid.Column="1" Height="35" VerticalAlignment="Top" Background="#091E36" Foreground="White" BorderBrush="#00B9FF" Padding="9,7" ToolTip="Type a tool name to search"/>
- </Grid>
- <Border Grid.Row="1" Background="#061427" BorderBrush="#007FC9" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,12">
- <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="ToolPanel" ItemWidth="255" Orientation="Horizontal"/></ScrollViewer>
- </Border>
- <Border Grid.Row="2" Background="#051122" BorderBrush="#007FC9" BorderThickness="1" CornerRadius="14" Padding="12">
- <DockPanel><StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#80D9FF" FontSize="11" FontWeight="Bold"/><Button x:Name="Clear" Content="Clear" Style="{StaticResource DarkButton}" Margin="18,0,0,6" Padding="8,2"/></StackPanel>
- <TextBox x:Name="Console" Background="Transparent" Foreground="#B4E4FF" BorderThickness="0" FontFamily="Consolas" FontSize="11" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></DockPanel>
- </Border>
- </Grid>
+<Grid.ColumnDefinitions><ColumnDefinition Width="230"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+<Border Background="#0B111A" BorderBrush="#294A6B" BorderThickness="0,0,1,0">
+<DockPanel Margin="14">
+<StackPanel DockPanel.Dock="Top" Margin="6,18,6,22">
+<Border Width="58" Height="58" CornerRadius="14" Background="#143D58" HorizontalAlignment="Left"><TextBlock Text="Y." Foreground="#80DCFF" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+<TextBlock Text="YUNEH SS TOOL" Foreground="White" FontSize="27" FontWeight="Bold" Margin="0,12,0,0"/>
+<TextBlock Text="SCREENSHARE TOOLKIT" Foreground="#69BBF3" FontSize="10"/>
+<Border Background="#285073" Height="1" Margin="0,20,0,0"/>
+</StackPanel>
+<StackPanel DockPanel.Dock="Bottom" Margin="5,10,5,10"><TextBlock Text="LOCAL • CONSENT REQUIRED" Foreground="#6BDDB8" FontSize="10" FontWeight="Bold"/><TextBlock Text="Built-in, local, read-only checks. Nothing is uploaded." TextWrapping="Wrap" Foreground="#9BB3CD" FontSize="11" Margin="0,8,0,0"/></StackPanel>
+<StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+<Button x:Name="SelfDeleteButton" Content="Self Delete / Remove Tool" Background="#253F5D" Foreground="White" BorderBrush="#47719A" BorderThickness="1" Padding="10,10" Cursor="Hand"/>
+<TextBlock Text="Deletes only this temporary launcher after closing." Foreground="#8DA6C0" FontSize="10" TextWrapping="Wrap" Margin="2,6,2,0"/>
+</StackPanel>
+<ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="NavPanel"/></ScrollViewer>
+</DockPanel>
+</Border>
+<Grid Grid.Column="1" Margin="23,20,23,18">
+<Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="210"/></Grid.RowDefinitions>
+<Grid Grid.Row="0">
+<Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="250"/></Grid.ColumnDefinitions>
+<StackPanel><TextBlock Text="Y. / INVESTIGATION WORKSPACE" Foreground="#71D4FF" FontSize="11" FontWeight="Bold"/><TextBlock x:Name="TitleText" Text="Tool Library" Foreground="White" FontSize="30" FontWeight="Bold" Margin="0,5,0,0"/><TextBlock x:Name="SubtitleText" Text="Choose a category or search the toolkit" Foreground="#94ABC7" FontSize="12" Margin="0,5,0,0"/></StackPanel>
+<TextBox Grid.Column="1" x:Name="SearchBox" Height="36" VerticalAlignment="Center" Background="#142334" Foreground="White" BorderBrush="#315579" Padding="9,7" ToolTip="Search tool names and descriptions"/>
+</Grid>
+<Border Grid.Row="1" Background="#24415D" Height="1" Margin="0,18,0,16"/>
+<Grid Grid.Row="2">
+<Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
+<Border Background="#101822" BorderBrush="#25425F" BorderThickness="1" CornerRadius="9" Margin="0,0,10,10" Padding="13">
+<DockPanel>
+<TextBlock DockPanel.Dock="Top" Text="MODULES &amp; TOOLS" Foreground="#63C1FF" FontSize="11" FontWeight="Bold" Margin="0,0,0,12"/>
+<Grid ClipToBounds="True">
+<TextBlock Text="Y." FontSize="270" FontWeight="Bold" Foreground="#2379BE" Opacity="0.58" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+<ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent"><StackPanel x:Name="ItemsPanel"/></ScrollViewer>
+</Grid>
+</DockPanel>
+</Border>
+<Border Grid.Column="1" Background="#101822" BorderBrush="#25425F" BorderThickness="1" CornerRadius="9" Margin="0,0,0,10" Padding="14">
+<StackPanel>
+<TextBlock Text="SELECTED MODULE" Foreground="#63C1FF" FontSize="11" FontWeight="Bold"/>
+<TextBlock x:Name="SelectedName" Text="Select a tool" Foreground="White" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" Margin="0,17,0,8"/>
+<TextBlock x:Name="SelectedDesc" Text="Choose a tool to see its purpose." Foreground="#A4BDD6" TextWrapping="Wrap" FontSize="12"/>
+<TextBlock x:Name="SelectedSource" Text="" Foreground="#6BBEFF" FontSize="11" TextWrapping="Wrap" Margin="0,16,0,0"/>
+<Button x:Name="OpenButton" Content="Open official page" Background="#167BAA" Foreground="White" FontWeight="Bold" BorderThickness="0" Height="40" Margin="0,22,0,0" IsEnabled="False" Cursor="Hand"/>
+<TextBlock Text="Results are indicators, not proof. Review with the computer owner." TextWrapping="Wrap" Foreground="#849CB7" FontSize="11" Margin="0,18,0,0"/>
+</StackPanel>
+</Border>
+</Grid>
+<Border Grid.Row="3" Background="#080D14" BorderBrush="#25425F" BorderThickness="1" CornerRadius="9" Padding="12">
+<DockPanel>
+<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="ACTIVITY CONSOLE" Foreground="#6BC4FF" FontSize="11" FontWeight="Bold"/><Button x:Name="CopyLog" Content="Copy" Background="#244563" Foreground="White" BorderThickness="0" Margin="18,0,0,0" Padding="10,3" Cursor="Hand"/><Button x:Name="ClearLog" Content="Clear" Background="#244563" Foreground="White" BorderThickness="0" Margin="8,0,0,0" Padding="10,3" Cursor="Hand"/></StackPanel>
+<TextBox x:Name="LogBox" Background="Transparent" Foreground="#8ED3FF" BorderThickness="0" FontFamily="Consolas" FontSize="11" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+</DockPanel>
+</Border>
+</Grid>
 </Grid>
 </Window>
 '@
 $reader = New-Object System.Xml.XmlNodeReader($xaml)
 $window = [Windows.Markup.XamlReader]::Load($reader)
-$sidebar = $window.FindName('Sidebar')
-$panel = $window.FindName('ToolPanel')
-$search = $window.FindName('Search')
-$heading = $window.FindName('Heading')
-$count = $window.FindName('CountText')
-$console = $window.FindName('Console')
-$script:category = 'All utilities'
-function Write-Activity([string]$message) {
- $console.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $message`r`n")
- $console.ScrollToEnd()
+$nav = $window.FindName('NavPanel')
+$items = $window.FindName('ItemsPanel')
+$title = $window.FindName('TitleText')
+$subtitle = $window.FindName('SubtitleText')
+$search = $window.FindName('SearchBox')
+$selectedName = $window.FindName('SelectedName')
+$selectedDesc = $window.FindName('SelectedDesc')
+$selectedSource = $window.FindName('SelectedSource')
+$open = $window.FindName('OpenButton')
+$log = $window.FindName('LogBox')
+$script:category = 'Yuneh Cheat finder'
+$script:selected = $null
+function Log-Event([string]$message) {
+ $log.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $message`r`n")
+ $log.ScrollToEnd()
 }
-function Test-ScriptLaunchAllowed([string]$path) {
- # Respect the target PC's execution policy; do not silently bypass it.
- $policy = Get-ExecutionPolicy
- $signature = Get-AuthenticodeSignature -LiteralPath $path
- if($policy -in @('Restricted','AllSigned')) {
-   if($policy -eq 'Restricted' -or $signature.Status -ne 'Valid') {
-     $reason = if($policy -eq 'Restricted') { 'PowerShell scripts are disabled on this computer.' } else { 'This script does not have a valid trusted signature.' }
-     Write-Activity "Blocked by Windows policy: $([IO.Path]::GetFileName($path)) ($policy)"
-     [void][Windows.MessageBox]::Show("$reason`n`nUtility: $([IO.Path]::GetFileName($path))`nPolicy: $policy`n`nYunehSSTool will not change Windows security settings. Ask the utility developer for a signed or standalone version.", 'YunehSSTool - Script Blocked', 'OK', 'Warning')
-     return $false
+$script:Render = {
+ $items.Children.Clear()
+ $title.Text = if($script:category -eq 'All tools') {'Full Tool Library'} else {$script:category}
+ $query = $search.Text.Trim()
+ $found = @($script:tools | Where-Object {
+  ($script:category -eq 'All tools' -or $_.Category -eq $script:category) -and
+  (!$query -or $_.Name -like "*$query*" -or $_.Description -like "*$query*")
+ })
+ $subtitle.Text = "$($found.Count) tools available in this view"
+ foreach($tool in $found) {
+  $btn = New-Object Windows.Controls.Button
+  $btn.Background = (New-Object Windows.Media.BrushConverter).ConvertFromString('#142230')
+  $btn.Foreground = [Windows.Media.Brushes]::White
+  $btn.BorderBrush = (New-Object Windows.Media.BrushConverter).ConvertFromString('#37657D')
+  $btn.BorderThickness = '1'
+  $btn.Padding = '12'
+  $btn.Margin = '0,0,0,8'
+  $btn.HorizontalContentAlignment = 'Stretch'
+  $btn.Cursor = 'Hand'
+  $btn.Tag = $tool
+  $stack = New-Object Windows.Controls.StackPanel
+  $head = New-Object Windows.Controls.TextBlock
+  $head.Text = $tool.Name
+  $head.FontWeight = 'SemiBold'
+  $head.FontSize = 14
+  $head.TextWrapping = 'Wrap'
+  $desc = New-Object Windows.Controls.TextBlock
+  $desc.Text = "$($tool.Description)   /   $($tool.Kind)"
+  $desc.Foreground = [Windows.Media.Brushes]::LightSteelBlue
+  $desc.FontSize = 11
+  $desc.TextWrapping = 'Wrap'
+  $desc.Margin = '0,6,0,0'
+  [void]$stack.Children.Add($head)
+  [void]$stack.Children.Add($desc)
+  $btn.Content = $stack
+  $btn.Add_Click({
+   param($sender,$args)
+   $tool = $sender.Tag
+   $script:selected = $tool
+   $selectedName.Text = $tool.Name
+   $selectedDesc.Text = $tool.Description
+   $selectedSource.Text = if($tool.Kind -eq 'External executable') {'Third-party executable - manual selection and confirmation'} else {'Opens its own CMD results window'}
+   $open.IsEnabled = $false
+   if($tool.Kind -eq 'External executable') {
+    $dialog = New-Object Microsoft.Win32.OpenFileDialog
+    $dialog.Title = 'Select MeowClientFucker.exe (third-party utility)'
+    $dialog.Filter = 'Executable files (*.exe)|*.exe'
+    $dialog.FileName = 'MeowClientFucker.exe'
+    if($dialog.ShowDialog($window) -ne $true){return}
+    $exePath = $dialog.FileName
+    if([IO.Path]::GetFileName($exePath) -ine 'MeowClientFucker.exe') {
+     [Windows.MessageBox]::Show('Select the supplied MeowClientFucker.exe file.','YunehSSTool') | Out-Null
+     return
+    }
+    $hash = (Get-FileHash -LiteralPath $exePath -Algorithm SHA256).Hash
+    $answer = [Windows.MessageBox]::Show(
+     "This is an unverified third-party executable. Only run it with the computer owner's permission and after checking its source.`n`nFile: $exePath`nSHA256: $hash`n`nLaunch it visibly now?",
+     'External Client Checker','YesNo','Warning')
+    if($answer -ne 'Yes'){return}
+    try {
+     Start-Process -FilePath $exePath -WorkingDirectory (Split-Path -Parent $exePath)
+     Log-Event 'Launched user-selected third-party client checker.'
+    } catch { Log-Event "Could not launch client checker: $($_.Exception.Message)" }
+    return
    }
- }
- if($policy -eq 'RemoteSigned') {
+   if($tool.Kind -eq 'External link') {
+    $answer = [Windows.MessageBox]::Show("Open the original developer page for $($tool.Name)? No software will be installed automatically.",'External utility','YesNo','Question')
+    if($answer -eq 'Yes'){Start-Process -FilePath $tool.Url; Log-Event "Opened developer page: $($tool.Name)"}
+    return
+   }
+   # Each built-in scanner opens a separate, visible CMD window.
+   # The tool may be launched from GitHub with iex, so $PSCommandPath may be empty.
+   $answer = [Windows.MessageBox]::Show(
+    "Open a separate CMD window for $($tool.Name)?`n`nThe scan is read-only and requires the computer owner's permission.",
+    'Yuneh Cheat Finder','YesNo','Question')
+   if($answer -ne 'Yes'){return}
    try {
-     $zone = Get-Item -LiteralPath $path -Stream Zone.Identifier -ErrorAction SilentlyContinue
-     if($zone -and $signature.Status -ne 'Valid') {
-       Write-Activity "Script needs trusted signature: $([IO.Path]::GetFileName($path))"
-       [void][Windows.MessageBox]::Show('Windows requires this downloaded script to be signed. Ask its developer for a signed or standalone release.', 'YunehSSTool - Script Blocked', 'OK', 'Warning')
-       return $false
-     }
-   } catch {}
- }
- return $true
-}
-function Show-Tools {
- $panel.Children.Clear()
- $heading.Text = $script:category
- $q = $search.Text.Trim()
- $matches = @($tools | Where-Object {($script:category -eq 'All utilities' -or $_.Category -eq $script:category) -and ($q.Length -eq 0 -or $_.Name.IndexOf($q,[StringComparison]::OrdinalIgnoreCase) -ge 0)})
- $count.Text = "$($matches.Count) utilities available"
- foreach($tool in $matches) {
-  $b = New-Object Windows.Controls.Button
-  $b.Style = $window.FindResource('DarkButton')
-  $info = $toolDescriptions[$tool.Name]
-  if (-not $info) { $info = 'Open this utility to learn what it checks.' }
-  $labelStack = New-Object Windows.Controls.StackPanel
-  $nameLabel = New-Object Windows.Controls.TextBlock
-  $nameLabel.Text = $tool.Name
-  $nameLabel.FontWeight = 'Bold'
-  $nameLabel.FontSize = 13
-  $nameLabel.Foreground = [Windows.Media.Brushes]::White
-  $nameLabel.TextWrapping = 'Wrap'
-  [void]$labelStack.Children.Add($nameLabel)
-  $detailLabel = New-Object Windows.Controls.TextBlock
-  $detailLabel.Text = $info
-  $detailLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#CDEBFF')
-  $detailLabel.FontSize = 11
-  $detailLabel.TextWrapping = 'Wrap'
-  $detailLabel.Margin = [Windows.Thickness]::new(0,5,0,0)
-  [void]$labelStack.Children.Add($detailLabel)
-  $launchLabel = New-Object Windows.Controls.TextBlock
-  $launchLabel.Text = 'Launch   >'
-  $launchLabel.FontSize = 11
-  $launchLabel.FontWeight = 'SemiBold'
-  $launchLabel.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#47DFFF')
-  $launchLabel.Margin = [Windows.Thickness]::new(0,9,0,0)
-  [void]$labelStack.Children.Add($launchLabel)
-  $b.Content = $labelStack
-  $b.HorizontalContentAlignment = 'Left'
-  $b.Width = 242
-  $b.MinHeight = 120
-  $b.Margin = '0,0,8,8'
-  $b.Tag = $tool
-  $b.ToolTip = "$info`nSource: $($tool.Url)"
-  $b.Add_Click({ param($sender,$e)
-   $t = $sender.Tag
-   try {
-    $uri = [Uri]$t.Url
-    if($uri.Scheme -ne 'https'){ throw 'Only HTTPS links are permitted.' }
-    $base = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'YunehSSTool\Utilities'
-    $folder = Join-Path $base ([regex]::Replace($t.Name,'[^a-zA-Z0-9_-]','_'))
-    $executables = @()
-    if(Test-Path -LiteralPath $folder) {
-      $executables = @(Get-ChildItem -LiteralPath $folder -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in @('.exe','.bat','.cmd','.ps1') })
+    $scanId = [string]$tool.Url
+    if(-not (@($script:tools | Where-Object { $_.Kind -eq 'Local' -and $_.Url -eq $scanId }).Count)) {
+     throw 'This scanner is not a built-in local check.'
     }
-    if($executables.Count -gt 0) {
-      $selected = $executables | Where-Object { $_.BaseName -eq $t.Name } | Select-Object -First 1
-      if(-not $selected -and $executables.Count -eq 1) { $selected = $executables[0] }
-      if(-not $selected) {
-        $names = ($executables | Select-Object -First 12 | ForEach-Object {$_.Name}) -join "`n"
-        Write-Activity "Multiple executables found for $($t.Name); opening folder for selection."
-        Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
-        [void][Windows.MessageBox]::Show("Several files found. Please review and run the correct file manually:`n`n$names",'YunehSSTool','OK','Information')
-        return
-      }
-      $answer = [Windows.MessageBox]::Show("Launch $($selected.Name)?`n`n$($selected.FullName)`n`nOnly run utilities you trust and have permission to use.",'YunehSSTool','YesNo','Question')
-      if($answer -ne 'Yes') { Write-Activity "Launch cancelled: $($t.Name)"; return }
-      if($selected.Extension -eq '.ps1') {
-        if(-not (Test-ScriptLaunchAllowed $selected.FullName)) { return }
-        Start-Process powershell.exe -ArgumentList @('-NoProfile','-STA','-NoExit','-File',('"' + $selected.FullName + '"'))
-      } elseif($selected.Extension -in @('.cmd','.bat')) {
-        Start-Process cmd.exe -ArgumentList @('/k',('"' + $selected.FullName + '"'))
-      } else { Start-Process -FilePath $selected.FullName -WorkingDirectory $selected.DirectoryName }
-      Write-Activity "Launched $($selected.Name)"
-      return
-    }
-    # Resolve release assets and repository-hosted binaries without assuming every repo has releases.
-    $downloadUrl = $null
-    $downloadName = $null
-    if($scriptSources.ContainsKey([string]$t.Name)) {
-      $downloadUrl = $scriptSources[[string]$t.Name]
-      $downloadName = [IO.Path]::GetFileName(([Uri]$downloadUrl).AbsolutePath)
-    } elseif($uri.AbsolutePath -match '(?i)\.(zip|exe)$') {
-      $downloadUrl = $t.Url
-      $downloadName = [IO.Path]::GetFileName($uri.AbsolutePath)
-    } elseif($uri.Host -eq 'github.com' -and $uri.AbsolutePath -match '^/([^/]+)/([^/]+)/?$') {
-      $owner = $Matches[1]; $repo = $Matches[2]
-      $headers = @{'User-Agent'='YunehSSTool'; 'Accept'='application/vnd.github+json'}
-      try {
-        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/releases/latest" -Headers $headers -TimeoutSec 15
-        $asset = @($release.assets | Where-Object { $_.name -match '(?i)\.(zip|exe)$' -and $_.name -notmatch '(?i)(source|src|debug|symbols)' } | Sort-Object @{Expression={if($_.name -match '(?i)\.exe$'){0}else{1}}}) | Select-Object -First 1
-        if($asset) { $downloadUrl = [string]$asset.browser_download_url; $downloadName = [string]$asset.name }
-      } catch { Write-Activity "No GitHub release asset for $($t.Name); checking repository files." }
-      if(-not $downloadUrl) {
-        try {
-          $repoInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo" -Headers $headers -TimeoutSec 15
-          $tree = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/git/trees/$($repoInfo.default_branch)?recursive=1" -Headers $headers -TimeoutSec 15
-          $file = @($tree.tree | Where-Object { $_.type -eq 'blob' -and $_.path -match '(?i)\.(zip|exe)$' -and $_.path -notmatch '(?i)(debug|symbols|test|sample)' } | Sort-Object @{Expression={if([IO.Path]::GetFileNameWithoutExtension($_.path) -eq $t.Name){0}else{1}}}) | Select-Object -First 1
-          if($file) {
-            $encodedPath = ($file.path -split '/' | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
-            $downloadUrl = "https://raw.githubusercontent.com/$owner/$repo/$($repoInfo.default_branch)/$encodedPath"
-            $downloadName = [IO.Path]::GetFileName($file.path)
-          }
-        } catch { Write-Activity "Could not resolve repository binaries: $($_.Exception.Message)" }
-      }
-    }
-    if(-not $downloadUrl) {
-      Write-Activity "No supported downloadable release found for $($t.Name)"
-      $choice = [Windows.MessageBox]::Show("No ready-to-run download was found for $($t.Name). The project might contain source code only, require installation, or have no release.`n`nOpen its official page for instructions?",'YunehSSTool','YesNo','Question')
-      if($choice -eq 'Yes') { Start-Process -FilePath $t.Url }
-      return
-    }
-    $choice = [Windows.MessageBox]::Show("Download $downloadName for $($t.Name)?`n`nSource: $downloadUrl`n`nAfter downloading, you can choose to open the downloaded EXE.",'YunehSSTool','YesNo','Question')
-    if($choice -ne 'Yes') { Write-Activity "Download cancelled: $($t.Name)"; return }
-    [IO.Directory]::CreateDirectory($folder) | Out-Null
-    $downloadPath = Join-Path $folder $downloadName
-    if(Test-Path -LiteralPath $downloadPath) { Remove-Item -LiteralPath $downloadPath -Force }
-    Write-Activity "Downloading $downloadName..."
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -UseBasicParsing -TimeoutSec 120 -ErrorAction Stop
-    if((Get-Item -LiteralPath $downloadPath).Length -lt 100) { throw 'Downloaded file is unexpectedly small.' }
-    if($downloadName -match '(?i)\.zip$') {
-      Add-Type -AssemblyName System.IO.Compression.FileSystem
-      $z = [IO.Compression.ZipFile]::OpenRead($downloadPath)
-      try {
-        foreach($entry in $z.Entries) {
-          $target = [IO.Path]::GetFullPath((Join-Path $folder $entry.FullName))
-          $prefix = [IO.Path]::GetFullPath($folder).TrimEnd('\') + '\'
-          if(-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe ZIP entry path.' }
-        }
-      } finally { $z.Dispose() }
-      # Extract to a dedicated subdirectory to avoid collisions on repeat downloads.
-      $extractFolder = Join-Path $folder 'extracted'
-      if(Test-Path -LiteralPath $extractFolder) { Remove-Item -LiteralPath $extractFolder -Recurse -Force }
-      [IO.Directory]::CreateDirectory($extractFolder) | Out-Null
-      [IO.Compression.ZipFile]::ExtractToDirectory($downloadPath,$extractFolder)
-    }
-    $hash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
-    Write-Activity "Saved $downloadName | SHA256: $hash"
-    # Never execute scripts or arbitrary first-file guesses from downloaded archives.
-    # For a single EXE, offer an immediate, explicit launch choice.
-    $candidates = @()
-    if($downloadName -match '(?i)\.exe$') {
-      $candidates = @(Get-Item -LiteralPath $downloadPath)
-    } elseif($downloadName -match '(?i)\.zip$') {
-      $candidates = @(Get-ChildItem -LiteralPath $folder -Recurse -File -Filter '*.exe' -ErrorAction SilentlyContinue)
-    }
-    if($downloadName -match '(?i)\.ps1$') {
-      $scriptHash = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
-      $runScript = [Windows.MessageBox]::Show("PowerShell script downloaded: $downloadName`nSHA256: $scriptHash`n`nThis script may access local files. Review its contents before running. Launch in a separate PowerShell window?",'YunehSSTool','YesNo','Warning')
-      if($runScript -eq 'Yes') {
-        if(-not (Test-ScriptLaunchAllowed $downloadPath)) { return }
-        Start-Process powershell.exe -ArgumentList @('-NoProfile','-NoExit','-File',('"' + $downloadPath + '"')) -ErrorAction Stop
-        Write-Activity "Opened script: $downloadName"
-      } else { Write-Activity "Saved script for review: $downloadName" }
-      return
-    }
-    if($candidates.Count -eq 1) {
-      $exe = $candidates[0]
-      $exeHash = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash
-      $sig = Get-AuthenticodeSignature -LiteralPath $exe.FullName
-      $publisher = if($sig.Status -eq 'Valid') { $sig.SignerCertificate.Subject } else { 'Unsigned or unverified' }
-      Write-Activity "Downloaded $downloadName | SHA256: $hash"
-      $run = [Windows.MessageBox]::Show("Download complete: $($t.Name)`n`nExecutable: $($exe.Name)`nPublisher: $publisher`nSHA256: $exeHash`n`nOpen this executable now? Only choose Yes if you trust its source.",'YunehSSTool','YesNo','Question')
-      if($run -eq 'Yes') {
-        Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -ErrorAction Stop
-        Write-Activity "Opened $($exe.Name)"
-      } else { Write-Activity "Saved $downloadName without launching" }
+    $cache = Join-Path $env:TEMP 'YunehSSTool-Scanner.ps1'
+    if($PSCommandPath -and (Test-Path -LiteralPath $PSCommandPath)) {
+     $source = [IO.File]::ReadAllText($PSCommandPath)
     } else {
-      Write-Activity "Downloaded $downloadName | SHA256: $hash"
-      [void][Windows.MessageBox]::Show("Download saved. Found $($candidates.Count) EXE files.`n`nFor safety, select the correct program manually in the download folder.",'YunehSSTool','OK','Information')
-      Start-Process explorer.exe -ArgumentList ('"' + $folder + '"')
+     $url = 'https://raw.githubusercontent.com/Yuneh21/YungehSSTool/main/YunehSSTool.ps1'
+     $source = [string](Invoke-RestMethod -Uri $url -ErrorAction Stop)
     }
-
+    $source = $source.TrimStart([char]0xFEFF)
+    $null = [scriptblock]::Create($source) # Check source syntax before opening CMD.
+    [IO.File]::WriteAllText($cache,$source,(New-Object Text.UTF8Encoding($false)))
+    $safeId = $scanId.Replace("'","''")
+    $child = @"
+try {
+  `$ErrorActionPreference = 'Stop'
+  `$code = [IO.File]::ReadAllText('$($cache.Replace("'","''"))').TrimStart([char]0xFEFF)
+  & ([scriptblock]::Create(`$code)) -ScanId '$safeId'
+} catch {
+  Write-Host ('Scanner failed: ' + `$_.Exception.Message) -ForegroundColor Red
+}
+"@
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($child))
+    $arguments = '/d /k powershell.exe -NoProfile -STA -EncodedCommand ' + $encoded
+    Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') -ArgumentList $arguments | Out-Null
+    Log-Event "Opened CMD scanner: $($tool.Name)"
    } catch {
-    Write-Activity "ERROR with $($t.Name): $($_.Exception.Message)"
-    [void][Windows.MessageBox]::Show("$($t.Name) failed:`n$($_.Exception.Message)", 'YunehSSTool Error', 'OK', 'Error')
+    Log-Event "Could not open scanner: $($_.Exception.Message)"
    }
   })
-  [void]$panel.Children.Add($b)
+  [void]$items.Children.Add($btn)
  }
 }
-foreach($cat in @('All utilities') + @($tools.Category | Sort-Object -Unique)) {
- $b = New-Object Windows.Controls.Button
- $b.Style = $window.FindResource('DarkButton')
- $b.Content = $cat
- $b.Tag = $cat
- $b.HorizontalContentAlignment = 'Left'
- $b.Margin = '0,0,0,9'
- $b.FontSize = 14
- $b.Add_Click({param($sender,$e) $script:category = [string]$sender.Tag; Show-Tools})
- [void]$sidebar.Children.Add($b)
+foreach($cat in @('Yuneh Cheat finder','Servers - Last 2 Weeks','Minecraft','Windows','Local checks','Downloads','All tools')) {
+ $btn = New-Object Windows.Controls.Button
+ $btn.Content = "   $cat"
+ $btn.Tag = $cat
+ $btn.Background = [Windows.Media.Brushes]::Transparent
+ $btn.Foreground = [Windows.Media.Brushes]::LightSteelBlue
+ $btn.BorderThickness = '0'
+ $btn.Height = 38
+ $btn.HorizontalContentAlignment = 'Left'
+ $btn.Cursor = 'Hand'
+ $btn.Add_Click({param($sender,$args) $script:category=[string]$sender.Tag; & $script:Render})
+ [void]$nav.Children.Add($btn)
 }
-$search.Add_TextChanged({Show-Tools})
-$window.FindName('Clear').Add_Click({$console.Clear();Write-Activity 'Console cleared'})
-Write-Activity "YunehSSTool ready: $($tools.Count) utility entries."
-Write-Activity 'Choose a utility to view its available download and launch options.'
-Write-Activity 'No automatic security bypass. Downloads and launches require approval.'
-# Startup-only consent dialog. No scans or downloads begin before approval.
-$consentXaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="YunehSSTool | Welcome" Width="560" Height="490"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#030C1D" Foreground="White" FontFamily="Segoe UI"
-        ShowInTaskbar="True">
-  <Border Padding="28" BorderBrush="#3388C0" BorderThickness="2" CornerRadius="12">
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="Auto"/>
-      </Grid.RowDefinitions>
-      <StackPanel Grid.Row="0" Margin="0,0,0,18">
-        <TextBlock Text="YUNEH SS TOOL" FontSize="26" FontWeight="Bold" Foreground="#A3E7FF"/>
-        <TextBlock Text="Screenshare consent" FontSize="16" Margin="0,7,0,0"/>
-      </StackPanel>
-      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-        <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#DFEAF5" LineHeight="21">
-          This tool is intended for a voluntary Minecraft screenshare check.&#10;&#10;
-          By continuing, you agree that the person conducting the check may ask you to run diagnostic utilities that inspect Minecraft logs, local files, and information about running programs. Some utilities are made by third parties.&#10;&#10;
-          No scan or download starts just by accepting this screen. Individual downloads and launches may ask for separate permission.&#10;&#10;
-          You can decline now or stop the check at any time. Do not turn off antivirus or Windows security settings.&#10;&#10;
-          This agreement does not waive your legal rights or remove anyone's responsibility for harm.
-        </TextBlock>
-      </ScrollViewer>
-      <CheckBox Grid.Row="2" Name="AgreeBox" Margin="0,14,0,16"
-                Foreground="White" Content="I understand and voluntarily agree to continue."/>
-      <Grid Grid.Row="3">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <Button Grid.Column="0" Name="DeclineButton" Content="Decline" Height="39"
-                Background="#22364F" Foreground="White" BorderBrush="#52708D"/>
-        <Button Grid.Column="2" Name="AcceptButton" Content="Accept &amp; Continue" Height="39"
-                Background="#0878C9" Foreground="White" BorderBrush="#6DD3FF" FontWeight="SemiBold" IsEnabled="False"/>
-      </Grid>
-    </Grid>
-  </Border>
-</Window>
-'@
-$consentReader = New-Object System.Xml.XmlNodeReader ([xml]$consentXaml)
-$consentWindow = [Windows.Markup.XamlReader]::Load($consentReader)
-$agreeBox = $consentWindow.FindName('AgreeBox')
-$acceptButton = $consentWindow.FindName('AcceptButton')
-$declineButton = $consentWindow.FindName('DeclineButton')
-$agreeBox.Add_Checked({ $acceptButton.IsEnabled = $true })
-$agreeBox.Add_Unchecked({ $acceptButton.IsEnabled = $false })
-$acceptButton.Add_Click({ $consentWindow.DialogResult = $true; $consentWindow.Close() })
-$declineButton.Add_Click({ $consentWindow.DialogResult = $false; $consentWindow.Close() })
-$consentAccepted = $consentWindow.ShowDialog()
-if($consentAccepted -ne $true) { return }
+$search.Add_TextChanged({ & $script:Render })
+$open.Add_Click({
+ if($null -eq $script:selected){return}
+ if($script:selected.Kind -eq 'Local') {
+  $answer = [Windows.MessageBox]::Show('Only run this check on a computer with its owner''s permission. Continue?','YunehSSTool','YesNo','Question')
+  if($answer -ne 'Yes'){Log-Event 'Check cancelled';return}
+  try {
+   $data = if($script:selected.Url -eq 'macrodeep') { 'Use the detector button to open the full macro report in CMD.' } else { Scan-Local $script:selected.Url }
+   $log.AppendText("=== $($script:selected.Name) ===`r`n$data`r`n")
+   $log.ScrollToEnd()
+   Log-Event 'Read-only check finished'
+  } catch { Log-Event "Check error: $($_.Exception.Message)" }
 
-Show-Tools
+ }
+})
+$window.FindName('CopyLog').Add_Click({[Windows.Clipboard]::SetText($log.Text); Log-Event 'Console copied'})
+$window.FindName('ClearLog').Add_Click({$log.Clear();Log-Event 'Console cleared'})
+# Explicit cleanup: only the currently executing launcher in the user's TEMP directory.
+$script:deleteOnClose = $false
+$script:cleanupPath = $PSCommandPath
+$window.FindName('SelfDeleteButton').Add_Click({
+ $path = $script:cleanupPath
+ $tempRoot = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
+ if([string]::IsNullOrWhiteSpace($path) -or
+    -not ([IO.Path]::GetFullPath($path).StartsWith($tempRoot,[StringComparison]::OrdinalIgnoreCase))) {
+  [Windows.MessageBox]::Show('This tool was not launched from your temporary folder. Close it and manually remove the script you downloaded. No files have been deleted.','YunehSSTool') | Out-Null
+  return
+ }
+ $confirm = [Windows.MessageBox]::Show(
+  "Close YunehSSTool and remove this temporary script?`n`n$path`n`nNo other files, logs or Windows history will be deleted.",
+  'YunehSSTool - Self Delete','YesNo','Question')
+ if($confirm -ne 'Yes'){return}
+ $script:deleteOnClose = $true
+ $window.Close()
+})
+$window.Add_Closed({
+ if(-not $script:deleteOnClose){return}
+ try {
+  $path = $script:cleanupPath
+  # cmd runs only after the GUI closes; the script file is still in use until PowerShell exits.
+  $quoted = '"' + $path + '"'
+  $args = '/d /c timeout /t 3 /nobreak >nul & del /f /q ' + $quoted
+  Start-Process -FilePath "$env:SystemRoot\System32\cmd.exe" -ArgumentList $args | Out-Null
+ } catch {
+  [Windows.MessageBox]::Show("Automatic cleanup could not start. Delete this file manually:`n$($script:cleanupPath)",'YunehSSTool') | Out-Null
+ }
+})
+Log-Event 'YunehSSTool Y. Edition ready. Official download pages open in browser; no automatic installs or uploads.'
+Log-Event 'Built-in checks plus optional manually selected third-party utility. Review findings manually.'
+& $script:Render
 [void]$window.ShowDialog()
