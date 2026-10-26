@@ -1,41 +1,42 @@
-# YunehSSTool UI rebrand builder
-# Downloads the original CheesySSTool source, edits visual branding, and saves a separate copy.
-# Original functionality and author attribution are retained.
+# YunehSSTool theme builder. Original functionality remains credited to cheese cat.
+# Downloads source as TEXT and writes a themed COPY; it does not execute the source.
 $ErrorActionPreference = 'Stop'
 $sourceUrl = 'https://raw.githubusercontent.com/cheesecatlol/CheesySSTool/refs/heads/main/CheesySSTool.ps1'
-$out = Join-Path $env:USERPROFILE 'Downloads\YunehSSTool_Rebranded.ps1'
+$out = Join-Path $env:USERPROFILE 'Downloads\YunehSSTool.ps1'
 try {
-    $response = Invoke-WebRequest -Uri $sourceUrl -UseBasicParsing -TimeoutSec 30
-    $scriptText = [string]$response.Content
-    if (-not $scriptText.Contains('CheesySSTool') -or -not $scriptText.Contains('$ToolData')) {
-        throw 'Unexpected source contents. No file created.'
-    }
-    # UI-only branding and palette changes. No scanner, launcher or tool commands are changed.
-    $scriptText = $scriptText.Replace('Title="CheesySSTool"', 'Title="YunehSSTool"')
-    $scriptText = $scriptText.Replace('Text="  CheesySSTool"', 'Text="  YunehSSTool"')
-    $scriptText = $scriptText.Replace('Text="CheesySSTool"', 'Text="YunehSSTool"')
-    $scriptText = $scriptText.Replace('Text="=^.^="', 'Text="Y."')
-    $scriptText = $scriptText.Replace('Color="#0F0B00"', 'Color="#090F1B"')
-    $scriptText = $scriptText.Replace('Color="#1A1200"', 'Color="#0C1728"')
-    $scriptText = $scriptText.Replace('Color="#221800"', 'Color="#13243A"')
-    $scriptText = $scriptText.Replace('Color="#F5C200"', 'Color="#65D5FF"')
-    $scriptText = $scriptText.Replace('Color="#A07800"', 'Color="#2F91C4"')
-    $scriptText = $scriptText.Replace('Color="#FFF4C8"', 'Color="#E7F7FF"')
-    $scriptText = $scriptText.Replace('Color="#907830"', 'Color="#87AFC5"')
-    $scriptText = $scriptText.Replace('Color="#060400"', 'Color="#060D18"')
-    foreach ($pair in @(
-        @('#3D2E00','#24445E'), @('#2A1E00','#1D3855'), @('#33F5C200','#3365D5FF'),
-        @('#F5C200','#65D5FF'), @('#0F0B00','#090F1B'), @('#FFF4C8','#E7F7FF'),
-        @('#5A4010','#527F9D'), @('#0A0700','#071320')
-    )) { $scriptText = $scriptText.Replace($pair[0], $pair[1]) }
-    # Replace only the decorative ASCII cat logo block with a large Y. text logo.
-    $scriptText = [regex]::Replace($scriptText, '(?s)(<TextBlock x:Name="CatBlock"\s*)Text="[^"]*"', '$1Text="Y."')
-    # Keep original author credit; add rebrand label to title bar.
-    $scriptText = $scriptText.Replace('Text="  -  by cheese cat"', 'Text="  |  Original by cheese cat"')
-    [System.IO.File]::WriteAllText($out, $scriptText, [System.Text.UTF8Encoding]::new($true))
+    $src = (Invoke-WebRequest -Uri $sourceUrl -UseBasicParsing -TimeoutSec 35).Content
+    if ($src -is [byte[]]) { $src = [Text.Encoding]::UTF8.GetString($src) }
+    if ($src -notmatch '\$ToolData\s*=\s*@\(' -or $src -notmatch '\[xml\]\$xaml') { throw 'Unexpected source format. No file was written.' }
+    $begin = $src.IndexOf('[xml]$xaml')
+    $end = $src.IndexOf('"@', $begin)
+    if ($begin -lt 0 -or $end -lt 0) { throw 'Could not locate the UI markup.' }
+    # Replace only display text and colors, not tool data or launch commands.
+    $src = $src.Replace('Title="CheesySSTool"','Title="YunehSSTool"')
+    $src = $src.Replace('Text="  CheesySSTool"','Text="  YunehSSTool"')
+    $src = $src.Replace('Text="CheesySSTool"','Text="YunehSSTool"')
+    $src = $src.Replace('Text="=^.^="','Text="Y."')
+    $src = $src.Replace('Color="#0F0B00"','Color="#080E18"')
+    $src = $src.Replace('Color="#1A1200"','Color="#0D1929"')
+    $src = $src.Replace('Color="#221800"','Color="#14253B"')
+    $src = $src.Replace('Color="#F5C200"','Color="#65D4FF"')
+    $src = $src.Replace('Color="#A07800"','Color="#3189B7"')
+    $src = $src.Replace('Color="#FFF4C8"','Color="#EAF8FF"')
+    $src = $src.Replace('Color="#907830"','Color="#91B5CE"')
+    $src = $src.Replace('Color="#060400"','Color="#050A12"')
+    $src = $src.Replace('#F5C200','#65D4FF').Replace('#33F5C200','#3365D4FF')
+    $src = $src.Replace('#0F0B00','#080E18').Replace('#1A1200','#0D1929').Replace('#221800','#14253B')
+    $src = $src.Replace('#3D2E00','#294561').Replace('#2A1E00','#203A55').Replace('#0A0700','#07111E')
+    $src = $src.Replace('#FFF4C8','#EAF8FF').Replace('#907830','#91B5CE').Replace('#060400','#050A12')
+    $src = $src.Replace('#5A4010','#7094B2')
+    $src = $src.Replace('CornerRadius="8"','CornerRadius="12"').Replace('CornerRadius="6"','CornerRadius="10"')
+    # Change the install folder label only. Preserve developer attribution and tool names.
+    $src = $src.Replace('Downloads\CheesySSTool','Downloads\YunehSSTool')
+    $header = '# YunehSSTool themed edition - original CheesySSTool code by cheese cat; theme modification only.' + "`r`n"
+    [IO.File]::WriteAllText($out, $header + $src, (New-Object Text.UTF8Encoding($false)))
     Write-Host "Created: $out" -ForegroundColor Cyan
-    Write-Host 'Review the generated file before running it. Third-party tool links and commands are unchanged.'
+    Write-Host 'Tool names, download URLs, commands, and author credits are retained.'
+    Write-Host 'Review the generated script before running it. No third-party tools were launched.'
 } catch {
-    Write-Host "Unable to build: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Build failed: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
