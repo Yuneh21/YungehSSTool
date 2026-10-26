@@ -216,28 +216,37 @@ function Write-Activity([string]$message) {
  $console.ScrollToEnd()
 }
 function Test-ScriptLaunchAllowed([string]$path) {
- # Respect the target PC's execution policy; do not silently bypass it.
+ # Diagnose effective execution policy without weakening Windows security settings.
+ if(-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+   Write-Activity "Script not found: $path"
+   [void][Windows.MessageBox]::Show("The script was not found:`n$path",'YunehSSTool - Missing File','OK','Warning')
+   return $false
+ }
  $policy = Get-ExecutionPolicy
  $signature = Get-AuthenticodeSignature -LiteralPath $path
- if($policy -in @('Restricted','AllSigned')) {
-   if($policy -eq 'Restricted' -or $signature.Status -ne 'Valid') {
-     $reason = if($policy -eq 'Restricted') { 'PowerShell scripts are disabled on this computer.' } else { 'This script does not have a valid trusted signature.' }
-     Write-Activity "Blocked by Windows policy: $([IO.Path]::GetFileName($path)) ($policy)"
-     $policies = (Get-ExecutionPolicy -List | Out-String).Trim()
-     $details = "$reason`n`nUtility: $([IO.Path]::GetFileName($path))`nEffective policy: $policy`n`nPolicy scopes:`n$policies`n`nThis is a PowerShell execution-policy restriction, not an anti-cheat detection. Do not disable antivirus or anti-cheat. On a PC you own or administer, review the script and Windows policy settings, or request a signed version from the developer."
-     [void][Windows.MessageBox]::Show($details, 'YunehSSTool - Script Blocked', 'OK', 'Warning')
-     return $false
-   }
+ $zoneId = $null
+ try {
+   $zoneText = Get-Content -LiteralPath $path -Stream Zone.Identifier -ErrorAction Stop
+   $zoneMatch = ($zoneText | Out-String) -match 'ZoneId=(\d+)'
+   if($zoneMatch) { $zoneId = [int]$Matches[1] }
+ } catch {}
+ $blocked = $false
+ $reason = ''
+ if($policy -eq 'Restricted') {
+   $blocked = $true
+   $reason = 'PowerShell script execution is restricted on this PC.'
+ } elseif($policy -eq 'AllSigned' -and $signature.Status -ne 'Valid') {
+   $blocked = $true
+   $reason = 'Windows requires a valid trusted digital signature for this script.'
+ } elseif($policy -eq 'RemoteSigned' -and $zoneId -ge 3 -and $signature.Status -ne 'Valid') {
+   $blocked = $true
+   $reason = 'Windows marks this file as downloaded from the internet, and it is not signed.'
  }
- if($policy -eq 'RemoteSigned') {
-   try {
-     $zone = Get-Item -LiteralPath $path -Stream Zone.Identifier -ErrorAction SilentlyContinue
-     if($zone -and $signature.Status -ne 'Valid') {
-       Write-Activity "Script needs trusted signature: $([IO.Path]::GetFileName($path))"
-       [void][Windows.MessageBox]::Show('Windows requires this downloaded script to be signed. Ask its developer for a signed or standalone release.', 'YunehSSTool - Script Blocked', 'OK', 'Warning')
-       return $false
-     }
-   } catch {}
+ if($blocked) {
+   $name = [IO.Path]::GetFileName($path)
+   Write-Activity "Blocked by Windows policy: $name ($policy; signature: $($signature.Status); zone: $zoneId)"
+   [void][Windows.MessageBox]::Show("$reason`n`nFile: $name`nPolicy: $policy`nSignature: $($signature.Status)`n`nUse a trusted, signed or administrator-approved version. YunehSSTool will not change Windows security settings.",'YunehSSTool - Script Blocked','OK','Warning')
+   return $false
  }
  return $true
 }
